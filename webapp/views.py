@@ -5,7 +5,6 @@ from webapp import app, api_call
 def root():
     return 'Hello.'
 
-@app.route("/members")
-@api_call()
+@api_call("/members")
 def list_members():
-    print "members!"
+    return "members!"

@@ -1,7 +1,7 @@
 import json
 import hmac
 
-from flask import Flask, request
+from flask import Flask, request, abort
 from flask.ext.sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
@@ -10,7 +10,7 @@ db = SQLAlchemy(app)
 
 import webapp.models
 
-def api_call(private=True):
+def api_call(path, private=True):
     """A decorator that decodes the POST body as JSON.
     The decoded body is stored as request.decoded.
 
@@ -31,7 +31,7 @@ def api_call(private=True):
                     abort(400)
 
                 for key in webapp.models.APIKey.query.all():
-                    mac_verify = hmac.new(key.secret)
+                    mac_verify = hmac.new(key.secret.encode("utf-8"))
                     mac_verify.update(message)
                     if mac_verify.digest() == mac:
                         break
@@ -49,8 +49,8 @@ def api_call(private=True):
             except:
                 abort(400)
 
-            return original(*args, **wkargs)
-        return wrapper
+            return original(*args, **kwargs)
+        return app.route(path, methods=["POST"])(wrapper)
     return decorator
 
 import webapp.views
@@ -58,7 +58,7 @@ import webapp.views
 
 def init():
     if app.config["DEBUG"]:
-        if not webapp.models.APIKey.query.filter_by(secret="testkey"):
+        if len(webapp.models.APIKey.query.filter_by(secret="testkey").all()) < 1:
             key = webapp.models.APIKey()
             key.secret = "testkey"
             db.session.add(key)
