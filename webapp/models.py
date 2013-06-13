@@ -1,3 +1,5 @@
+import datetime
+
 from webapp import db
 
 class APIKey(db.Model):
@@ -10,7 +12,7 @@ class APIKey(db.Model):
 class MemberTransfer(db.Model):
     __tablename__ = "member_transfer"
     id = db.Column(db.Integer, primary_key=True)
-    member_id = db.Column(db.Integer, db.ForeignKey("member.id"))
+    member = db.Column(db.Integer, db.ForeignKey("member.id"))
     transfer_id = db.Column(db.Integer, db.ForeignKey("transfer.id"))
     year = db.Column(db.Integer)
     month = db.Column(db.Integer)
@@ -27,9 +29,19 @@ class Member(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(64), unique=True)
     type = db.Column(db.Enum("starving", "fatty"))
-    transfers = db.relationship("MemberTransfer", backref="members")
+    transfers = db.relationship("MemberTransfer")
     active = db.Column(db.Boolean)
     api_keys = db.relationship("APIKey")
+
+    def months_due(self):
+        # TODO: fix if member hasn't paid yet...
+        now = datetime.datetime.now()
+        oldest = 0
+        for mt in self.transfers:
+            age = mt.year * 12 + (mt.month - 1)
+            if age > oldest:
+                oldest = age
+        return (now.year * 12 + (now.month - 1)) - oldest
 
     def __init__(self, _id, _username, _type, _active):
         self.id = _id

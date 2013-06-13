@@ -10,9 +10,10 @@ db = SQLAlchemy(app)
 
 import webapp.models
 
-def api_call(path, private=True):
+def api_method(path, private=True):
     """A decorator that decodes the POST body as JSON.
     The decoded body is stored as request.decoded.
+    The resulting data is also JSON-encoded.
 
     It also that ensures that the request is authorized if 'private' is True.
     If so, it also adds a request.member object that points to a member if an
@@ -45,11 +46,14 @@ def api_call(path, private=True):
                 message = request.data
                 request.member = None
             try:
-                request.decoded = json.loads(message)
+                if request.data:
+                    request.decoded = json.loads(request.data)
+                else:
+                    request.decoded = {}
             except:
                 abort(400)
 
-            return original(*args, **kwargs)
+            return json.dumps(original(*args, **kwargs))
         return app.route(path, methods=["POST"])(wrapper)
     return decorator
 
