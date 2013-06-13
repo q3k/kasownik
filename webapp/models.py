@@ -1,5 +1,11 @@
 from webapp import db
 
+class APIKey(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    secret = db.Column(db.String(64))
+    member = db.Column(db.Integer, db.ForeignKey("member.id"))
+    description = db.Column(db.Text)
+
 
 class MemberTransfer(db.Model):
     __tablename__ = "member_transfer"
@@ -23,6 +29,7 @@ class Member(db.Model):
     type = db.Column(db.Enum("starving", "fatty"))
     transfers = db.relationship("MemberTransfer", backref="members")
     active = db.Column(db.Boolean)
+    api_keys = db.relationship("APIKey")
 
     def __init__(self, _id, _username, _type, _active):
         self.id = _id
