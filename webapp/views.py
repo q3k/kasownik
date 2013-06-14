@@ -1,11 +1,14 @@
 import datetime
+import requests
 
-from webapp import app, api_method, models
-from flask import request, abort
+from webapp import app, api_method, models, login_manager, forms, User
+from flask.ext.login import login_user, login_required, logout_user
+from flask import request, abort, redirect, flash, render_template, url_for
 
 
 @app.route("/")
-def root():
+@login_required
+def index():
     return 'Hello.'
 
 @api_method("/members")
@@ -60,3 +63,23 @@ def manamana():
         money_paid += amount
 
     return dict(required=money_required, paid=money_paid/100)
+
+
+@app.route("/login", methods=["POST", "GET"])
+def login():
+    form = forms.LoginForm(request.form)
+    if request.method == "POST" and form.validate():
+        if requests.get("https://capacifier.hackerspace.pl/staff/{}".format(form.username.data)).status_code == 200:
+            if requests.post("https://auth.hackerspace.pl/",
+                             dict(login=form.username.data, password=form.password.data)).status_code == 200:
+                user = User(form.username.data)
+                login_user(user)
+                flash('Logged in succesfully')
+                return redirect(request.args.get("next") or url_for("index"))
+    return render_template("login.html", form=form)
+
+@app.route("/logout")
+@login_required
+def logout():
+    logout_user()
+    return redirect(url_for("index"))

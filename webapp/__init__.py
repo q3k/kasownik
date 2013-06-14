@@ -3,12 +3,16 @@ import hmac
 
 from flask import Flask, request, abort
 from flask.ext.sqlalchemy import SQLAlchemy
+from flask.ext.login import LoginManager
 
 app = Flask(__name__)
 app.config.from_object("config.DevelopmentConfig")
 db = SQLAlchemy(app)
+login_manager = LoginManager()
+login_manager.init_app(app)
 
 import webapp.models
+
 
 def api_method(path, private=True):
     """A decorator that decodes the POST body as JSON.
@@ -56,6 +60,29 @@ def api_method(path, private=True):
             return json.dumps(original(*args, **kwargs))
         return app.route(path, methods=["POST"])(wrapper)
     return decorator
+
+
+class User(object):
+    def __init__(self, username):
+        self.username = username
+
+    def is_authenticated(self):
+        return True
+
+    def is_active(self):
+        return True
+
+    def is_anonymous(self):
+        return False
+
+    def get_id(self):
+        return self.username
+
+
+@login_manager.user_loader
+def load_user(username):
+    return User(username)
+
 
 import webapp.views
 

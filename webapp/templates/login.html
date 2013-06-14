@@ -1,0 +1,9 @@
+<html>
+    <body>
+        <form method="post" action="/login">
+            {{ form.username()|safe }}
+            {{ form.password()|safe }}
+            <input type="submit" value="Login" />
+        </form>
+    </body>
+</html>
