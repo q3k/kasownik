@@ -1,9 +1,9 @@
-<html>
-    <body>
+{% extends "root.html" %}
+{% block title %}login{% endblock %}
+{% block content %}
         <form method="post" action="/login">
             {{ form.username()|safe }}
             {{ form.password()|safe }}
             <input type="submit" value="Login" />
         </form>
-    </body>
-</html>
+{% endblock %}

@@ -58,7 +58,7 @@ def api_method(path, private=True):
                 abort(400)
 
             return json.dumps(original(*args, **kwargs))
-        return app.route(path, methods=["POST"])(wrapper)
+        return app.route("/api" + path, methods=["POST"])(wrapper)
     return decorator
 
 

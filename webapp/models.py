@@ -2,6 +2,7 @@ import datetime
 
 from webapp import db
 
+
 class APIKey(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     secret = db.Column(db.String(64))

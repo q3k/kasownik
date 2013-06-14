@@ -6,8 +6,11 @@ import datetime
 import re
 import hashlib
 import StringIO
+import requests
+import bs4
+import time
 
-from webapp import app
+# from webapp import app
 
 
 class BREParseError(Exception):
@@ -16,7 +19,7 @@ class BREParseError(Exception):
 
 class BRERow(object):
     BRE_IN = [772, 770]
-    SECRET = app.config["SECRET"]
+    # SECRET = app.config["SECRET"]
 
     def parse_data(self):
         datar = self.data_raw.split(";")
@@ -72,3 +75,114 @@ def guess_title(title):
     if title in [u"składka", u"opłata", u"opłata miesięczna", "skladka"]:
         return member, _type, None
     return member, _type, title
+
+class BREFetcher(object):
+    BASE = "https://www.ibre.com.pl/mt/"
+    def __init__(self):
+        self.logging_token = None
+        self.token = None
+        self.s = requests.Session()
+
+    def _get(self, page):
+        url = self.BASE + page
+        r = self.s.get(url)
+        if r.status_code != 200:
+            raise Exception("return code %i" % r.status_code)
+        return bs4.BeautifulSoup(r.text)
+
+    def _post(self, page, data):
+        url = self.BASE + page
+        mdata = {}
+        mdata["screenWidth"] = 1337
+        mdata["screenHeight"] = 1337
+        mdata["LOGGING_TOKEN"] = self.logging_token
+        mdata["lang"] = ""
+        mdata.update(data)
+        print mdata
+        r = self.s.post(url, mdata)
+        if r.status_code != 200:
+            raise Exception("return code %i" % r.status_code)
+        return bs4.BeautifulSoup(r.text)
+
+    def _gettoken(self, soup):
+        # print soup
+        menulinks = soup.findAll("a", "menulink")
+        onclick = menulinks[0]["onclick"]
+        self.token = re.search(r"TOKEN=([a-z0-9]+)", onclick).group(1)
+        print "TOKEN: {}".format(self.token)
+
+    def login(self, username, token):
+        main = self._get("fragments/cua/login.jsp")
+        self.logging_token = main.find("input", type="hidden", attrs={"name": "LOGGING_TOKEN"})["value"]
+        print self.logging_token
+
+        data = {}
+        data["TARGET"] = "/cualogin.do"
+        data["RAWPASSWORD"] = token
+        data["loginType"] = "token"
+        data["LOGIN_OR_ALIAS"] = username
+        logged = self._post("fragments/cua/login.fcc", data)
+        self._gettoken(logged)
+    
+    def create_report(self):
+        reportpage = self._get("main/navigate.do?templateId={}&to=newReport&org.apache.struts.taglib.html.TOKEN={}".format(self.uid, self.token))
+        self._gettoken(reportpage)
+
+        def setparameter(item, value, extra=None):
+            data = {}
+            data["synchronous"] = "on"
+            data["pagerOffset"] = 0
+            data["pager.page"] = 0
+            data["pager.newPage"] = 0
+            data["org.apache.struts.taglib.html.TOKEN"] = self.token
+            data["filter.orderByColumn"] = None
+            data["filter.orderByAscending"] = "false"
+            data["commandlist"] = "generate"
+            data["command"] = "editItem"
+            data["selectedItemKey"] = item
+
+            generate = self._post("report/generate/submitParameterList.do", data)
+            self._gettoken(generate)
+
+            data = {}
+            data["value"] = value
+            data["org.apache.struts.taglib.html.TOKEN"] = self.token
+            data["commandlist"] = "ok"
+            data["command"] = "ok"
+            if extra:
+                data.update(extra)
+
+            specify = self._post("report/specify/submitParameter.do", data)
+            self._gettoken(specify)
+
+        setparameter("{}.0[account]".format(self.uid), 1060690633)
+        setparameter("{}.0[from_date]".format(self.uid), "01.01.2001 00:00", {"predefiniedValue.selectedKey": "@empty", "valueTimePart": "00:00", "valueDatePart": "01.01.2001"})
+        setparameter("{}.0[to_date]".format(self.uid), "", {"predefiniedValue.selectedKey": "@currentday", "valueTimePart": "", "valueDatePart": ""})
+
+        data = {}
+        data["synchronous"] = "on"
+        data["pagerOffset"] = 0
+        data["pager.page"] = 0
+        data["pager.newPage"] = 0
+        data["org.apache.struts.taglib.html.TOKEN"] = self.token
+        data["filter.orderByColumn"] = None
+        data["filter.orderByAscending"] = "false"
+        data["commandlist"] = "generate"
+        data["command"] = "generate"
+        data["selectedItemKey"] = "{}.0[to_date]".format(self.uid)
+        submit_parameter_list = self._post("report/generate/submitParameterList.do", data)
+        self._gettoken(submit_parameter_list)
+        print "waiting..."
+        time.sleep(3)
+        data = {}
+        data["org.apache.struts.taglib.html.TOKEN"] = self.token
+        data["commandlist"] = "showReport"
+        data["command"] = "showReport"
+        report = self._post("report/generate/submitPleaseWait.do", data)
+        self._gettoken(report)
+        print report
+
+
+f = BREFetcher()
+f.login("???", raw_input("token: "))
+f.create_report()

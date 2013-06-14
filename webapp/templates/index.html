@@ -1,0 +1,32 @@
+{% extends "root.html" %}
+{% block title %}members{% endblock %}
+{% block content %}
+        <h2>Operations:</h2>
+            <a href="/fetch">fetch transfers from bre</a><br />
+            <a href="/spam">send monthly report to members</a>
+        <h2>Active members:</h2>
+        <ul>
+        {% for member in active_members %}
+            <li>
+                <a style="color: #{{ member.color }};" href="/member/{{ member.username }}">{{ member.username }}</a> ({{ member.months_due() }} months due)
+            | <a href="/member/{{ member.username }}/edit">edit</a>
+            | <a href="/member/{{ member.username }}/deactivate">deactivate</a>
+        {% if member.months_due() > 2 %}
+            | <a href="/member/{{ member.username }}/warn">warn</a>
+        {% else %}
+            | <a href="/member/{{ member.username }}/remind">remind</a>
+        {% endif %}
+            </li>
+        {% endfor %}
+        </ul>
+        <h2>Inactive members:</h2>
+        <ul>
+        {% for member in inactive_members %}
+            <li>
+                {{ member.username }}
+                | <a href="/member/{{ member.username }}/edit">edit</a>
+                | <a href="/member/{{ member.username }}/activate">activate</a>
+            </li>
+        {% endfor %}
+        </ul>
+{% endblock %}
