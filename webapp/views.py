@@ -44,6 +44,7 @@ def member_status():
 
     return response
 
+
 @api_method("/mana", private=False)
 def manamana():
     """To-odee doo-dee-doo!"""
@@ -51,7 +52,7 @@ def manamana():
     money_required = 4300
     money_paid = 0
     now = datetime.datetime.now()
-    mts = models.MemberTransfer.query.filter_by(year=now.year,month=now.month).\
+    mts = models.MemberTransfer.query.filter_by(year=now.year, month=now.month).\
         join(models.MemberTransfer.transfer).all()
     for mt in mts:
         amount_all = mt.transfer.amount
