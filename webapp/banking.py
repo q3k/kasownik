@@ -10,7 +10,7 @@ import requests
 import bs4
 import time
 
-# from webapp import app
+from webapp import app
 
 
 class BREParseError(Exception):
@@ -19,7 +19,7 @@ class BREParseError(Exception):
 
 class BRERow(object):
     BRE_IN = [772, 770]
-    # SECRET = app.config["SECRET"]
+    SECRET = app.config["SECRET"]
 
     def parse_data(self):
         datar = self.data_raw.split(";")
@@ -79,6 +79,7 @@ def guess_title(title):
 class BREFetcher(object):
     BASE = "https://www.ibre.com.pl/mt/"
     def __init__(self):
+        self.uid = app.config["BRE_UID"]
         self.logging_token = None
         self.token = None
         self.s = requests.Session()
@@ -86,6 +87,7 @@ class BREFetcher(object):
     def _get(self, page):
         url = self.BASE + page
         r = self.s.get(url)
+        print "[i] GET {} -> {}".format(page, r.status_code)
         if r.status_code != 200:
             raise Exception("return code %i" % r.status_code)
         return bs4.BeautifulSoup(r.text)
@@ -98,8 +100,8 @@ class BREFetcher(object):
         mdata["LOGGING_TOKEN"] = self.logging_token
         mdata["lang"] = ""
         mdata.update(data)
-        print mdata
         r = self.s.post(url, mdata)
+        print "[i] POST {} -> {}".format(page, r.status_code)
         if r.status_code != 200:
             raise Exception("return code %i" % r.status_code)
         return bs4.BeautifulSoup(r.text)
@@ -109,12 +111,11 @@ class BREFetcher(object):
         menulinks = soup.findAll("a", "menulink")
         onclick = menulinks[0]["onclick"]
         self.token = re.search(r"TOKEN=([a-z0-9]+)", onclick).group(1)
-        print "TOKEN: {}".format(self.token)
+        print "[i] Token: {}".format(self.token)
 
     def login(self, username, token):
         main = self._get("fragments/cua/login.jsp")
         self.logging_token = main.find("input", type="hidden", attrs={"name": "LOGGING_TOKEN"})["value"]
-        print self.logging_token
 
         data = {}
         data["TARGET"] = "/cualogin.do"
@@ -123,22 +124,27 @@ class BREFetcher(object):
         data["LOGIN_OR_ALIAS"] = username
         logged = self._post("fragments/cua/login.fcc", data)
         self._gettoken(logged)
-    
+
     def create_report(self):
         reportpage = self._get("main/navigate.do?templateId={}&to=newReport&org.apache.struts.taglib.html.TOKEN={}".format(self.uid, self.token))
         self._gettoken(reportpage)
 
+        def generate_command(command, commandlist):
+            data = {
+                "synchronous": "on",
+                "pagerOffset": 0,
+                "pager.page": 0,
+                "pager.newPage": 0,
+                "org.apache.struts.taglib.html.TOKEN": self.token,
+                "filter.orderByColumn": None,
+                "filter.orderByAscending": "false",
+                "commandlist": commandlist,
+                "command": command,
+            }
+            return data
+
         def setparameter(item, value, extra=None):
-            data = {}
-            data["synchronous"] = "on"
-            data["pagerOffset"] = 0
-            data["pager.page"] = 0
-            data["pager.newPage"] = 0
-            data["org.apache.struts.taglib.html.TOKEN"] = self.token
-            data["filter.orderByColumn"] = None
-            data["filter.orderByAscending"] = "false"
-            data["commandlist"] = "generate"
-            data["command"] = "editItem"
+            data = generate_command("editItem", "generate")
             data["selectedItemKey"] = item
 
             generate = self._post("report/generate/submitParameterList.do", data)
@@ -159,20 +165,11 @@ class BREFetcher(object):
         setparameter("{}.0[from_date]".format(self.uid), "01.01.2001 00:00", {"predefiniedValue.selectedKey": "@empty", "valueTimePart": "00:00", "valueDatePart": "01.01.2001"})
         setparameter("{}.0[to_date]".format(self.uid), "", {"predefiniedValue.selectedKey": "@currentday", "valueTimePart": "", "valueDatePart": ""})
 
-        data = {}
-        data["synchronous"] = "on"
-        data["pagerOffset"] = 0
-        data["pager.page"] = 0
-        data["pager.newPage"] = 0
-        data["org.apache.struts.taglib.html.TOKEN"] = self.token
-        data["filter.orderByColumn"] = None
-        data["filter.orderByAscending"] = "false"
-        data["commandlist"] = "generate"
-        data["command"] = "generate"
+        data = generate_command("generate", "generate")
         data["selectedItemKey"] = "{}.0[to_date]".format(self.uid)
         submit_parameter_list = self._post("report/generate/submitParameterList.do", data)
         self._gettoken(submit_parameter_list)
-        print "waiting..."
+        print "[i] Waiting..."
         time.sleep(3)
         data = {}
         data["org.apache.struts.taglib.html.TOKEN"] = self.token
@@ -180,9 +177,26 @@ class BREFetcher(object):
         data["command"] = "showReport"
         report = self._post("report/generate/submitPleaseWait.do", data)
         self._gettoken(report)
-        print report
+
+        data = generate_command("export", "export")
+        report_ready = self._post("report/submitReportReady.do", data)
+        self._gettoken(report_ready)
+
+        data = generate_command("processExport", "processExport")
+        data["format.selectedKey"] = "dat"
+        data["fileName"] = "raport"
+        data["encoding.selectedKey"] = "iso"
+        export = self._post("report/submitExport.do", data)
+        self._gettoken(export)
+        dlurl = re.search(r'openPopup\("(.+)"\);', str(export)).group(1)
+        print "[i] Download popup URL: {}".format(dlurl)
+        page = dlurl.replace("/mt/", "")
+        dlpage = self._get(page)
+        fileurl = "report/downloadExport.do?command=download"
+        f = self.s.post(self.BASE + fileurl, dict(FileNumber=0), stream=True)
+        return f.raw
 
 
 f = BREFetcher()
-f.login("???", raw_input("token: "))
-f.create_report()
+f.login(raw_input("[?] ID: "), raw_input("[?] Token: "))
+print f.create_report().read()
