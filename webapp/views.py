@@ -69,16 +69,10 @@ def api_member_info():
 
 
 @api_method("/month/<year>/<month>", private=False)
-@api_method("/mana", private=False)
-def manamana(year=None, month=None):
-    """To-odee doo-dee-doo!"""
+def api_month(year=None, month=None):
     # TODO: export this to the config
     money_required = 4300
     money_paid = 0
-    if not (year and month):
-        now = datetime.datetime.now()
-        year = now.year
-        month = now.month
     mts = models.MemberTransfer.query.filter_by(year=year, month=month).\
         join(models.MemberTransfer.transfer).all()
     for mt in mts:
@@ -87,6 +81,12 @@ def manamana(year=None, month=None):
         money_paid += amount
 
     return dict(required=money_required, paid=money_paid/100)
+
+@api_method("/mana", private=False)
+def manamana(year=None, month=None):
+    """To-odee doo-dee-doo!"""
+    now = datetime.datetime.now()
+    return api_month(year=now.year, month=now.month)
 
 
 @app.route("/login", methods=["POST", "GET"])
