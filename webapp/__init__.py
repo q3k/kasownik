@@ -1,12 +1,13 @@
 import json
 import hmac
+from functools import wraps
 
 from flask import Flask, request, abort
 from flask.ext.sqlalchemy import SQLAlchemy
 from flask.ext.login import LoginManager
 
 app = Flask(__name__)
-app.config.from_object("config.DevelopmentConfig")
+app.config.from_object("config.CurrentConfig")
 db = SQLAlchemy(app)
 login_manager = LoginManager()
 login_manager.init_app(app)
@@ -24,6 +25,7 @@ def api_method(path, private=True):
     API key should be limited to that member (for example, when handing over
     keys to normal members)."""
     def decorator(original):
+        @wraps(original)
         def wrapper(*args, **kwargs):
             if private:
                 if request.data.count(",") != 1:
@@ -51,14 +53,16 @@ def api_method(path, private=True):
                 request.member = None
             try:
                 if request.data:
-                    request.decoded = json.loads(request.data)
+                    request.decoded = json.loads(request.data.decode("base64"))
                 else:
                     request.decoded = {}
-            except:
+            except Exception as e:
+                print request.data
+                print e
                 abort(400)
 
             return json.dumps(original(*args, **kwargs))
-        return app.route("/api" + path, methods=["POST"])(wrapper)
+        return app.route("/api" + path, methods=["POST"] if private else ["POST", "GET"])(wrapper)
     return decorator
 
 

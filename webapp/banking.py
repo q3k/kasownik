@@ -48,6 +48,7 @@ class BRERow(object):
         self.amount = int(float(row[3].replace(",", ".").replace(" ", "")) * 100)
         self._type = int(row[6])
         self.data_raw = row[5]
+
         self.type = ""
         self.raw = row
 
@@ -57,14 +58,14 @@ class BREParser(object):
         self.rows = []
 
     def parse(self, snapshot):
-        c = csv.reader(StringIO.StringIO(snapshot), delimiter="|")
+        c = csv.reader(snapshot, delimiter="|")
         for row in c:
             r = BRERow([r.decode("iso-8859-2") for r in row])
             r.parse_data()
             self.rows.append(r)
 
     def get_by_type(self, y):
-        return [row for row in self.rows if row.type == "IN"]
+        return [row for row in self.rows if row.type == y]
 
 
 def guess_title(title):
@@ -197,6 +198,7 @@ class BREFetcher(object):
         return f.raw
 
 
-f = BREFetcher()
-f.login(raw_input("[?] ID: "), raw_input("[?] Token: "))
-print f.create_report().read()
+if __name__ == "__main__":
+    f = BREFetcher()
+    f.login(raw_input("[?] ID: "), raw_input("[?] Token: "))
+    print f.create_report().read()

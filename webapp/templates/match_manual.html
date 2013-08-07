@@ -1,0 +1,55 @@
+{% extends "root.html" %}
+{% block title %}manual match{% endblock %}
+{% block content %}
+        <script>
+        function payment(months, uid, username)
+        {
+            var div = document.getElementById("uid-" + uid);
+            div.style.display = "none";
+
+            var xhr = new XMLHttpRequest();
+            xhr.open("GET", "/match/" + username + "/" + uid + "/" + months, true);
+            xhr.send();
+        }
+        </script>
+    {% for t in transfers_unmatched %}
+        {% set matchability = t.get_matchability()[0] %}
+        {% set extra = t.get_matchability()[1] %}
+
+        {% if matchability > 0 %}
+            <div id="uid-{{t.uid}}">
+                <h2>{{t.title}}</h2>
+                Amount: {{t.amount/100}} <br />
+                Title: {{t.title}} <br />
+
+            {% if matchability == 1 %}
+                <h3>Previous transfers...</h3>
+                <ul>
+                {% for member_transfer in extra.transfers %}
+                    <li>{{ member_transfer.transfer.title }} for <b>{{ member_transfer.transfer.amount/100 }}</b> </li>
+                {% endfor %}
+                </ul>
+                {% set fattycount = t.amount/10000 %}
+                {% set starvingcount = t.amount/5000 %}
+                <b>Unknown type... </b><br />
+                <a href="javascript:payment(1, '{{t.uid}}', '{{ extra.username }}')">This is a one-time payment.</a><br />
+                <a href="javascript:payment({{fattycount|int}}, '{{t.uid}}', '{{ extra.username }}')">This is a {{fattycount|int}}-time payment. (fatty)</a><br />
+                <a href="javascript:payment({{starvingcount|int}}, '{{t.uid}}', '{{ extra.username }}')">This is a {{starvingcount|int}}-time payment. (starving)</a><br />
+                <a href="javascript:payment(prompt('months?', '0'), '{{t.uid}}', '{{ extra.username }}')">This is a N-time payment. (superfatty?)</a><br />
+            {% elif matchability == 2 %}
+                <b>Unknown member...</b><br />
+                <a href="add/starving/{{extra}}">Add member {{extra}} - starving</a><br />
+                <a href="add/fatty/{{extra}}">Add member {{extra}} - fatty</a>
+            {% elif matchability == 3 %}
+                <b>Unparseable...</b>
+                <form method="POST" action="/match/">
+                    username: <input name="username" />
+                    <input type="hidden" name="uid" value="{{t.uid}}" />
+                    <input type="submit" value="match" />
+                </form>
+            {% endif %}
+            </div>
+
+        {% endif %}
+    {% endfor %}
+{% endblock %}

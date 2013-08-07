@@ -11,14 +11,14 @@ class APIClient(object):
         self.address = address.rstrip("/")
 
     def __getattr__(self, name):
-        def f(data={}):
+        def f(**data):
             serialized = json.dumps(data)
             mac = hmac.new(self.key)
             mac.update(serialized)
             mac64 = mac.digest().encode("base64")
             data = serialized.encode("base64") + "," + mac64
-            r = requests.post("%s/%s" % (self.address, name), data)
-            return r
+            r = requests.post("%s/api/%s" % (self.address, name), data)
+            return json.loads(r.text)
         return f
 
 if __name__ == "__main__":
