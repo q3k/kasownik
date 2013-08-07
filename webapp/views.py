@@ -88,6 +88,19 @@ def manamana(year=None, month=None):
     now = datetime.datetime.now()
     return api_month(year=now.year, month=now.month)
 
+@api_method("/months_due/<membername>", private=False)
+def api_months_due(membername):
+    member = models.Member.query.filter_by(username=membername).first()
+    if not member:
+        return False
+    year, month = member.get_last_paid()
+    if not year:
+        return False
+    now = datetime.datetime.now()
+    then_timestamp = year * 12 + (month-1)
+    now_timestamp = now.year * 12 + (now.month-1)
+    return now_timestamp - then_timestamp
+
 
 @app.route("/login", methods=["POST", "GET"])
 def login():

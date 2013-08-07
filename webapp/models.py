@@ -38,6 +38,19 @@ class Member(db.Model):
     active = db.Column(db.Boolean)
     api_keys = db.relationship("APIKey")
 
+    def get_last_paid(self):
+        year, month, oldest = 0, 0, 0
+        for mt in self.transfers:
+            age = mt.year * 12 + (mt.month - 1)
+            if age > oldest:
+                oldest = age
+                year = mt.year
+                month = mt.month
+        if year == 0:
+            return None, None
+        else:
+            return year, month
+
     def get_next_unpaid(self):
         year, month, oldest = 0, 0, 0
         for mt in self.transfers:
