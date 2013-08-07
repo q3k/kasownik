@@ -40,7 +40,7 @@ def list_members():
 
 
 @api_method("/member_info")
-def member_info():
+def api_member_info():
     mid = request.decoded["member"]
     if request.member and request.member.username != mid:
         abort(403)
