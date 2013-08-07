@@ -68,14 +68,18 @@ def api_member_info():
     return response
 
 
+@api_method("/month/<year>/<month>", private=False)
 @api_method("/mana", private=False)
-def manamana():
+def manamana(year=None, month=None):
     """To-odee doo-dee-doo!"""
     # TODO: export this to the config
     money_required = 4300
     money_paid = 0
-    now = datetime.datetime.now()
-    mts = models.MemberTransfer.query.filter_by(year=now.year, month=now.month).\
+    if not (year and month):
+        now = datetime.datetime.now()
+        year = now.year
+        month = now.month
+    mts = models.MemberTransfer.query.filter_by(year=year, month=month).\
         join(models.MemberTransfer.transfer).all()
     for mt in mts:
         amount_all = mt.transfer.amount
