@@ -22,7 +22,6 @@ def update_transfer_rows():
                                        row.amount, row.title,
                                        row.time)
             db.session.add(transfer)
-            print row.title
     db.session.commit()
 
 
