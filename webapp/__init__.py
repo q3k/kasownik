@@ -92,9 +92,5 @@ import webapp.views
 
 
 def init():
-    if app.config["DEBUG"]:
-        if len(webapp.models.APIKey.query.filter_by(secret="testkey").all()) < 1:
-            key = webapp.models.APIKey()
-            key.secret = "testkey"
-            db.session.add(key)
-            db.session.commit()
+    pass
+
