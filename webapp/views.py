@@ -163,6 +163,7 @@ def fetch():
             flash("Error when fetching data.")
             return redirect(url_for("fetch"))
 
+    logic.update_transfer_rows()
     transfers_unmatched = logic.get_unmatched_transfers()
 
     return render_template("fetch.html", form=form, transfers_unmatched=transfers_unmatched)
