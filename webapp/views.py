@@ -2,14 +2,13 @@
 
 import datetime
 import requests
-import os
 import re
 from email.mime.text import MIMEText
 from subprocess import Popen, PIPE
 
-from webapp import app, api_method, models, login_manager, forms, User, db
+from webapp import app, forms, User, db, models
 from flask.ext.login import login_user, login_required, logout_user
-from flask import request, abort, redirect, flash, render_template, url_for
+from flask import request, redirect, flash, render_template, url_for
 import banking
 import logic
 
@@ -28,78 +27,6 @@ def index():
         else:
             member.color = "FF0000"
     return render_template("index.html", active_members=active_members, inactive_members=inactive_members)
-
-
-@api_method("/members")
-def list_members():
-    if request.member:
-        abort(403)
-
-    members = [member.username for member in models.Member.query.all()]
-    return members
-
-
-@api_method("/member_info")
-def api_member_info():
-    mid = request.decoded["member"]
-    if request.member and request.member.username != mid:
-        abort(403)
-
-    member = models.Member.query.filter_by(username=mid).join(models.Member.transfers).\
-        join(models.MemberTransfer.transfer).first()
-    mts = member.transfers
-    response = {}
-    response["paid"] = []
-    for mt in mts:
-        t = {}
-        t["year"] = mt.year
-        t["month"] = mt.month
-        transfer = {}
-        transfer["uid"] = mt.transfer.uid
-        transfer["amount"] = mt.transfer.amount
-        transfer["title"] = mt.transfer.title
-        transfer["account"] = mt.transfer.account_from
-        transfer["from"] = mt.transfer.name_from
-        t["transfer"] = transfer
-        response["paid"].append(t)
-    response["months_due"] = member.months_due()
-    response["membership"] = member.type
-
-    return response
-
-
-@api_method("/month/<year>/<month>", private=False)
-def api_month(year=None, month=None):
-    # TODO: export this to the config
-    money_required = 4300
-    money_paid = 0
-    mts = models.MemberTransfer.query.filter_by(year=year, month=month).\
-        join(models.MemberTransfer.transfer).all()
-    for mt in mts:
-        amount_all = mt.transfer.amount
-        amount = amount_all / len(mt.transfer.member_transfers)
-        money_paid += amount
-
-    return dict(required=money_required, paid=money_paid/100)
-
-@api_method("/mana", private=False)
-def manamana(year=None, month=None):
-    """To-odee doo-dee-doo!"""
-    now = datetime.datetime.now()
-    return api_month(year=now.year, month=now.month)
-
-@api_method("/months_due/<membername>", private=False)
-def api_months_due(membername):
-    member = models.Member.query.filter_by(username=membername).first()
-    if not member:
-        return False
-    year, month = member.get_last_paid()
-    if not year:
-        return False
-    now = datetime.datetime.now()
-    then_timestamp = year * 12 + (month-1)
-    now_timestamp = now.year * 12 + (now.month-1)
-    return now_timestamp - then_timestamp
 
 
 @app.route("/login", methods=["POST", "GET"])
