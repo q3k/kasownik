@@ -8,8 +8,9 @@ from flask import request, abort, Response
 from webapp import models, app
 
 class APIError(Exception):
-    def __init__(self, message):
+    def __init__(self, message, code=500):
         self.message = message
+        self.code = code
 
 def _public_api_method(path):
     """A decorator that adds a public, GET based method at /api/<path>.json.
@@ -18,16 +19,23 @@ def _public_api_method(path):
     def decorator2(original):
         @wraps(original)
         def wrapper_json(*args, **kwargs):
-            content = original(*args, **kwargs)
+            try:
+                content = original(*args, **kwargs)
+                status = "ok"
+                code = 200
+            except APIError as e:
+                content = e.message
+                code = e.code
+                status = "error"
             
             last_transfer = models.Transfer.query.order_by(models.Transfer.date.desc()).first()
             modified = str(last_transfer.date)
 
             r = {}
-            r["status"] = "ok"
+            r["status"] = status
             r["content"] = content
             r["modified"] = modified
-            return Response(json.dumps(r), mimetype="application/json")
+            return Response(json.dumps(r), mimetype="application/json"), code
         return app.route("/api/" + path + ".json", methods=["GET"])(wrapper_json)
     return decorator2
             
@@ -145,10 +153,10 @@ def api_manamana(year=None, month=None):
 def api_months_due(membername):
     member = models.Member.query.filter_by(username=membername).first()
     if not member:
-        return False
+        raise APIError("No such member.", 404)
     year, month = member.get_last_paid()
     if not year:
-        return False
+        raise APIError("Member never paid", 402)
     now = datetime.datetime.now()
     then_timestamp = year * 12 + (month-1)
     now_timestamp = now.year * 12 + (now.month-1)
