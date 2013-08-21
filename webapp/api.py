@@ -2,6 +2,7 @@ import hmac
 import json
 import datetime
 from functools import wraps
+from sqlalchemy import and_
 
 from flask import request, abort, Response
 
@@ -165,3 +166,15 @@ def api_months_due(membername):
     then_timestamp = year * 12 + (month-1)
     now_timestamp = now.year * 12 + (now.month-1)
     return now_timestamp - then_timestamp
+
+@_public_api_method("cashflow/<int:year>/<int:month>")
+def api_cashflow(year, month):
+    start = datetime.date(year=year, month=month, day=1)
+    month += 1
+    if month > 12:
+        month = 1
+        year += 1
+    end = datetime.date(year=year, month=month, day=1)
+    transfers = models.Transfer.query.filter(and_(models.Transfer.date >= start, models.Transfer.date < end)).all()
+    amount_in = sum(t.amount for t in transfers)
+    return {"in": amount_in/100, "out": -1}
