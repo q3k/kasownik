@@ -27,6 +27,10 @@ def _public_api_method(path):
                 content = e.message
                 code = e.code
                 status = "error"
+            except Exception as e:
+                content = "Internal server error."
+                code = 500
+                status = "error"
             
             last_transfer = models.Transfer.query.order_by(models.Transfer.date.desc()).first()
             modified = str(last_transfer.date)
