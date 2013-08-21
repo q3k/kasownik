@@ -3,9 +3,13 @@ import json
 import datetime
 from functools import wraps
 
-from flask import request, abort
+from flask import request, abort, Response
 
 from webapp import models, app
+
+class APIError(Exception):
+    def __init__(self, message):
+        self.message = message
 
 def _public_api_method(path):
     """A decorator that adds a public, GET based method at /api/<path>.json.
@@ -14,8 +18,16 @@ def _public_api_method(path):
     def decorator2(original):
         @wraps(original)
         def wrapper_json(*args, **kwargs):
-            r = original(*args, **kwargs)
-            return json.dumps(r)
+            content = original(*args, **kwargs)
+            
+            last_transfer = models.Transfer.query.order_by(models.Transfer.date.desc()).first()
+            modified = str(last_transfer.date)
+
+            r = {}
+            r["status"] = "ok"
+            r["content"] = content
+            r["modified"] = modified
+            return Response(json.dumps(r), mimetype="application/json")
         return app.route("/api/" + path + ".json", methods=["GET"])(wrapper_json)
     return decorator2
             
@@ -115,19 +127,19 @@ def _stats_for_month(year, month):
         amount = amount_all / len(mt.transfer.member_transfers)
         money_paid += amount
 
-    return money_required, money_paid
+    return money_required, money_paid/100
 
 @_public_api_method("month/<year>/<month>")
 def api_month(year=None, month=None):
     money_required, money_paid = _stats_for_month(year, month)
-    return dict(required=money_required, paid=money_paid/100)
+    return dict(required=money_required, paid=money_paid)
 
 @_public_api_method("mana")
 def api_manamana(year=None, month=None):
     """To-odee doo-dee-doo!"""
     now = datetime.datetime.now()
     money_required, money_paid = _stats_for_month(now.year, now.month)
-    return dict(required=money_required/100, paid=money_paid/100)
+    return dict(required=money_required, paid=money_paid)
 
 @_public_api_method("months_due/<membername>")
 def api_months_due(membername):
