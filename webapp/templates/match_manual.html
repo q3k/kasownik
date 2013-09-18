@@ -36,10 +36,17 @@
                 <a href="javascript:payment({{fattycount|int}}, '{{t.uid}}', '{{ extra.username }}')">This is a {{fattycount|int}}-time payment. (fatty)</a><br />
                 <a href="javascript:payment({{starvingcount|int}}, '{{t.uid}}', '{{ extra.username }}')">This is a {{starvingcount|int}}-time payment. (starving)</a><br />
                 <a href="javascript:payment(prompt('months?', '0'), '{{t.uid}}', '{{ extra.username }}')">This is a N-time payment. (superfatty?)</a><br />
+
             {% elif matchability == 2 %}
                 <b>Unknown member...</b><br />
                 <a href="add/starving/{{extra}}">Add member {{extra}} - starving</a><br />
                 <a href="add/fatty/{{extra}}">Add member {{extra}} - fatty</a>
+                <form method="POST" action="/match/">
+                    username: <input name="username" />
+                    <input type="hidden" name="uid" value="{{t.uid}}" />
+                    <input type="submit" value="match other username" />
+                </form>
+
             {% elif matchability == 3 %}
                 <b>Unparseable...</b>
                 <form method="POST" action="/match/">
