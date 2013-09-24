@@ -185,16 +185,30 @@ def sendspam():
     spam = []
     members = models.Member.query.all()
     for member in members:
-        status = "\n".join([" - %02i/%i, covered by transaction uid %s for %.2f PLN from %s (%s) on %s" \
-            % (mt.month, mt.year, mt.transfer.uid, mt.transfer.amount/100, mt.transfer.account_from, \
-               mt.transfer.title, mt.transfer.date.strftime("%d/%m/%Y")) for mt in member.transfers])
-        nag = ""
+        details = "\n".join([" - opłata za %02i/%i, pokryta przelewem za %.2f PLN w dniu %s" \
+            % (mt.month, mt.year, mt.transfer.amount/100,  mt.transfer.date.strftime("%d/%m/%Y")) for mt in member.transfers])
+        months_due = member.months_due()
+        money_due = months_due * 100 if member.type == 'fatty' else months_due * 50
+        due = "???"
+        if months_due > 0:
+            due = u"Jesteś %i składek (%i PLN) do tyłu. Kiepsko." % (months_due, money_due/100)
+            if months_due == 1:
+                due = u"Jesteś o składkę (%i PLN) do tyłu." % money_due/100
+            if months_due > 2:
+                due += u"""\nZgodnie z regulaminem HS, trzymiesięczne zaległość w składkach oznacza automatyczne wykreślenie z listy członków i usunięcie karty z zamka.
+Masz tydzień na uregulowanie składki od daty wysłania tego emaila."""
+        elif months_due == 0:
+            due = u"Jesteś na bieżąco ze składkami. Hura!"
+        else:
+            due = u"Jesteś do przodu ze składkami. Świetnie!"
         text = u"""Siemasz %s,
 
 automatycznie wygenerowałem raport ze stanu składek dla Twojego konta.
 Oto stan na dzień %s:
 
 %s
+
+Oto szczegółowe informacje o Twoich wpłatach:
 %s
 
 Jeśli coś się nie zgadza, odpisz na tego mejla z pretensjami - wiadomość trafi do naszego białkowego skarbnika który postara się ustalić, co poszło źle.
@@ -203,12 +217,12 @@ Jednocześnie przypominam, że trzymiesięczna zaległość w płaceniu oznacza 
 xoxoxoxo,
 Hackerspace'owy Faszysta
 --
-„100 linii pythona!” - enki o skrypcie do składek""" % (member.username, datetime.datetime.now().strftime("%d/%m/%Y"), status, nag)
+„100 linii pythona!” - enki o skrypcie do składek""" % (member.username, datetime.datetime.now().strftime("%d/%m/%Y"), due, details)
         msg = MIMEText(text, "plain", "utf-8")
         msg["From"] = "Faszysta Hackerspace'owy <fascist@hackerspace.pl>"
         msg["Subject"] = "Stan składek na dzień %s" % datetime.datetime.now().strftime("%d/%m/%Y")
-        spam.append(msg)
-    for msg in spam:
+        
+        # I will replace this with python-ldap soon. I promise!
         p = Popen(["ldapsearch", "-x", "-ZZ", "-b" "ou=People,dc=hackerspace,dc=pl", "uid=%s" % member.username], stdout=PIPE)
         lines = p.stdout.read()
         emails = ["%s@hackerspace.pl" % member.username ]
@@ -219,7 +233,9 @@ Hackerspace'owy Faszysta
                         if not email.endswith("@hackerspace.pl"):
                                 emails.append(email)
         msg["To"] = ", ".join(emails)
+        spam.append(msg)
 
+    for msg in spam:
         p = Popen(["/usr/sbin/sendmail", "-t"], stdin=PIPE)
         p.communicate(msg.as_string())
     return "done!"
