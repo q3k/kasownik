@@ -222,7 +222,7 @@ Hackerspace'owy Faszysta
 --
 „100 linii pythona!” - enki o skrypcie do składek""" % (member.username, datetime.datetime.now().strftime("%d/%m/%Y"), due, details)
         msg = MIMEText(text, "plain", "utf-8")
-        msg["From"] = "Faszysta Hackerspace'owy <fascist@hackerspace.pl>"
+        msg["From"] = "Hackerspace'owy Kasownik <kasownik@hackerspace.pl>"
         msg["Subject"] = "Stan składek na dzień %s" % datetime.datetime.now().strftime("%d/%m/%Y")
         
         # I will replace this with python-ldap soon. I promise!
