@@ -131,7 +131,7 @@ def api_member():
 
 def _stats_for_month(year, month):
     # TODO: export this to the config
-    money_required = 4300
+    money_required = 4800
     money_paid = 0
     mts = models.MemberTransfer.query.filter_by(year=year, month=month).\
         join(models.MemberTransfer.transfer).all()
