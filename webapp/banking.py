@@ -78,7 +78,7 @@ def guess_title(title):
     return member, _type, title
 
 class BREFetcher(object):
-    BASE = "https://www.ibre.com.pl/mt/"
+    BASE = "https://companynet.mbank.pl/mt/"
     def __init__(self):
         self.uid = app.config["BRE_UID"]
         self.logging_token = None
