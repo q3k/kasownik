@@ -218,7 +218,7 @@ Jeśli coś się nie zgadza, odpisz na tego mejla z pretensjami - wiadomość tr
 Jednocześnie przypominam, że trzymiesięczna zaległość w płaceniu oznacza wykreślenie z listy członków - automatyczną!
 
 xoxoxoxo,
-Hackerspace'owy Faszysta
+Hackerspace'owy Kasownik
 --
 „100 linii pythona!” - enki o skrypcie do składek""" % (member.username, datetime.datetime.now().strftime("%d/%m/%Y"), due, details)
         msg = MIMEText(text, "plain", "utf-8")
