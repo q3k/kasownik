@@ -189,11 +189,7 @@ class BREFetcher(object):
         data["encoding.selectedKey"] = "iso"
         export = self._post("report/submitExport.do", data)
         self._gettoken(export)
-        dlurl = re.search(r'openPopup\("(.+)"\);', str(export)).group(1)
-        print "[i] Download popup URL: {}".format(dlurl)
-        page = dlurl.replace("/mt/", "")
-        dlpage = self._get(page)
-        fileurl = "report/downloadExport.do?command=download"
+        fileurl = "report/downloadExport.do?command=download&FileNumber=0"
         f = self.s.post(self.BASE + fileurl, dict(FileNumber=0), stream=True)
         return f.raw
 
