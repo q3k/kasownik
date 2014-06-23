@@ -26,6 +26,15 @@ def index():
             member.color = "E0941B"
         else:
             member.color = "FF0000"
+    for member in inactive_members:
+        due = member.months_due()
+        if due < 1:
+            member.color = "00FF00"
+        elif due < 3:
+            member.color = "E0941B"
+        else:
+            member.color = "FF0000"
+
     return render_template("index.html", active_members=active_members, inactive_members=inactive_members)
 
 

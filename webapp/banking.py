@@ -18,7 +18,7 @@ class BREParseError(Exception):
 
 
 class BRERow(object):
-    BRE_IN = [772, 770, 968]
+    BRE_IN = [772, 773, 770, 968]
     SECRET = app.config["SECRET"]
 
     def parse_data(self):
