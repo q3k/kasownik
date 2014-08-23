@@ -251,6 +251,7 @@ Hackerspace'owy Kasownik
     	#f = open("/tmp/spamspamspam", "a")
 	#f.write(msg.as_string())
 	#f.close()
-        p = Popen(["/usr/sbin/sendmail", "-t"], stdin=PIPE)
-        p.communicate(msg.as_string())
+        #p = Popen(["/usr/sbin/sendmail", "-t"], stdin=PIPE)
+        #p.communicate(msg.as_string())
+        pass
     return "done!"

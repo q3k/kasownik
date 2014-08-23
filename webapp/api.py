@@ -161,11 +161,14 @@ def api_months_due(membername):
         raise APIError("No such member.", 404)
     year, month = member.get_last_paid()
     if not year:
-        raise APIError("Member never paid", 402)
-    now = datetime.datetime.now()
-    then_timestamp = year * 12 + (month-1)
-    now_timestamp = now.year * 12 + (now.month-1)
-    return now_timestamp - then_timestamp
+        raise APIError("Member never paid.", 402)
+    if year and member.active == False:
+        raise APIError("No longer a member.", 410)
+    due = member.months_due()
+    #now = datetime.datetime.now()
+    #then_timestamp = year * 12 + (month-1)
+    #now_timestamp = now.year * 12 + (now.month-1)
+    return due
 
 @_public_api_method("cashflow/<int:year>/<int:month>")
 def api_cashflow(year, month):

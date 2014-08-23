@@ -4,23 +4,25 @@
         <h2>Operations:</h2>
             <a href="/fetch">fetch transfers from bre</a><br />
             <a href="/spam">send monthly report to members</a>
-        <h2>Active members:</h2>
-        <ul>
-        {% for member in active_members %}
+        {% for group in active_members|groupby("type") %}
+        <h2>Active members, {{ group.grouper }}:</h2>
+        <ol>
+	    {% for member in group.list  %}
             <li>
                 <a style="color: #{{ member.color }};" href="/member/{{ member.username }}">{{ member.username }}</a> ({{ member.months_due() }} months due)
             | <a href="/member/{{ member.username }}/edit">edit</a>
             | <a href="/member/{{ member.username }}/deactivate">deactivate</a>
-        {% if member.months_due() > 2 %}
+            {% if member.months_due() > 2 %}
             | <a href="/member/{{ member.username }}/warn">warn</a>
-        {% else %}
+            {% else %}
             | <a href="/member/{{ member.username }}/remind">remind</a>
-        {% endif %}
+            {% endif %}
             </li>
-        {% endfor %}
-        </ul>
+	    {% endfor %}
+        </ol>
+	{% endfor %}
         <h2>Inactive members:</h2>
-        <ul>
+        <ol>
         {% for member in inactive_members %}
             <li>
                <a style="color: #{{ member.color }};" href="/member/{{ member.username }}">{{ member.username }}</a> ({{ member.months_due() }} months due) 
@@ -28,5 +30,5 @@
                 | <a href="/member/{{ member.username }}/activate">activate</a>
             </li>
         {% endfor %}
-        </ul>
+        </ol>
 {% endblock %}
