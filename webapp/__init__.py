@@ -1,6 +1,8 @@
+import requests
+
 from flask import Flask
 from flask.ext.sqlalchemy import SQLAlchemy
-from flask.ext.login import LoginManager
+from flask.ext.login import LoginManager, AnonymousUserMixin
 
 app = Flask(__name__)
 app.config.from_object("config.CurrentConfig")
@@ -11,9 +13,18 @@ login_manager.init_app(app)
 import webapp.models
 
 
+class AnonymousUser(AnonymousUserMixin):
+    def is_admin(self):
+        return False
+
+
+login_manager.anonymous_user = AnonymousUser
+
+
 class User(object):
     def __init__(self, username):
         self.username = username
+        self._admin = None
 
     def is_authenticated(self):
         return True
@@ -26,6 +37,15 @@ class User(object):
 
     def get_id(self):
         return self.username
+
+    def is_admin(self):
+        if not self.is_authenticated():
+            return False
+        if self._admin is None:
+            r = requests.get('https://capacifier.hackerspace.pl/staff/'+
+                             self.username)
+            self._admin = r.status_code == 200
+        return self._admin
 
 
 @login_manager.user_loader

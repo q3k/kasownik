@@ -1,9 +1,11 @@
 {% extends "root.html" %}
-{% block title %}login{% endblock %}
+{% block title %}Login{% endblock %}
 {% block content %}
+    <div class="login">
         <form method="post" action="/login">
             {{ form.username()|safe }}
             {{ form.password()|safe }}
             <input type="submit" value="Login" />
         </form>
+    </div>
 {% endblock %}

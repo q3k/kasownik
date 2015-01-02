@@ -13,7 +13,12 @@ import banking
 import logic
 
 
-@app.route("/")
+@app.route('/')
+def stats():
+    return render_template('stats.html')
+
+
+@app.route("/admin")
 @login_required
 def index():
     active_members = models.Member.query.order_by(models.Member.username).filter_by(active=True).all()
@@ -42,13 +47,12 @@ def index():
 def login():
     form = forms.LoginForm(request.form)
     if request.method == "POST" and form.validate():
-        if requests.get("https://capacifier.hackerspace.pl/staff/{}".format(form.username.data)).status_code == 200:
-            if requests.post("https://auth.hackerspace.pl/",
-                             dict(login=form.username.data, password=form.password.data)).status_code == 200:
-                user = User(form.username.data)
-                login_user(user)
-                flash('Logged in succesfully')
-                return redirect(request.args.get("next") or url_for("index"))
+        if requests.post("https://auth.hackerspace.pl/",
+                         dict(login=form.username.data, password=form.password.data)).status_code == 200:
+            user = User(form.username.data)
+            login_user(user)
+            flash('Logged in succesfully')
+            return redirect(request.args.get("next") or url_for("index"))
     return render_template("login.html", form=form)
 
 

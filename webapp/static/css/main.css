@@ -1,0 +1,17 @@
+body {
+  padding-top: 50px;
+}
+.login {
+  padding: 40px 15px;
+  text-align: center;
+}
+
+.stats {
+  
+}
+
+#legend {
+    display: inline-block;
+    vertical-align: top;
+    position: absolute;
+}
