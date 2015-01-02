@@ -7,7 +7,7 @@ from email.mime.text import MIMEText
 from subprocess import Popen, PIPE
 
 from webapp import app, forms, User, db, models
-from flask.ext.login import login_user, login_required, logout_user
+from flask.ext.login import login_user, login_required, logout_user, current_user
 from flask import request, redirect, flash, render_template, url_for
 import banking
 import logic
@@ -195,6 +195,14 @@ def sendspam():
     members = models.Member.query.filter_by(active=True).all()
     for member in members:
     	transfers = sorted(member.transfers, key=lambda mt: mt.year * 12 + (mt.month-1) )
+        # quick hack for inactive members
+        active_user = True
+        for mt in transfers:
+            if mt.transfer.date.year == 1:
+                active_user = False
+                break
+        if not active_user:
+            continue
         details = u"\n".join([u" - opłata za %02i/%i, pokryta przelewem za %.2f PLN w dniu %s" \
             % (mt.month, mt.year, mt.transfer.amount/100,  mt.transfer.date.strftime("%d/%m/%Y")) for mt in transfers])
         months_due = member.months_due()
@@ -251,7 +259,7 @@ Hackerspace'owy Kasownik
     	#f = open("/tmp/spamspamspam", "a")
 	#f.write(msg.as_string())
 	#f.close()
-        #p = Popen(["/usr/sbin/sendmail", "-t"], stdin=PIPE)
-        #p.communicate(msg.as_string())
+        p = Popen(["/usr/sbin/sendmail", "-t"], stdin=PIPE)
+        p.communicate(msg.as_string())
         pass
     return "done!"
