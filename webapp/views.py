@@ -44,8 +44,8 @@ def memberlist():
 @app.route("/admin")
 @login_required
 def index():
-    active_members = models.Member.query.order_by(models.Member.username).filter_by(active=True).all()
-    inactive_members = models.Member.query.order_by(models.Member.username).filter_by(active=False).all()
+    inactive_members = models.Member.get_members(True).order_by(models.Member.username).filter_by(active=True)
+    active_members = models.Member.get_members(True).order_by(models.Member.username).filter_by(active=False)
     for member in active_members:
         due = member.months_due()
         if due < 1:
@@ -63,7 +63,9 @@ def index():
         else:
             member.color = "FF0000"
 
-    return render_template("index.html", active_members=active_members, inactive_members=inactive_members)
+    return render_template("admin_index.html",
+                           active_members=active_members,
+                           inactive_members=inactive_members)
 
 @app.route("/login", methods=["POST", "GET"])
 def login():

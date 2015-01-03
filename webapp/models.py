@@ -4,6 +4,8 @@
 import datetime
 import re
 
+from sqlalchemy.orm import subqueryload_all
+
 from webapp import app,db
 
 
@@ -39,6 +41,17 @@ class Member(db.Model):
     api_keys = db.relationship("APIKey")
     join_year = db.Column(db.Integer)
     join_month = db.Column(db.Integer)
+
+    @classmethod
+    def get_members(kls, deep=False):
+        """Gets all members as an SQLAlchemy query.
+        @param(deep) - whether to do a subqueryload_all and load all transfer data
+        """
+        if deep:
+            return kls.query.options(subqueryload_all(kls.transfers,
+                MemberTransfer.transfer))
+        else:
+            return kls.query
 
     def get_last_paid(self):
         year, month, oldest = 0, 0, 0
