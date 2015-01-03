@@ -23,7 +23,7 @@ def memberlist():
     cache_key = 'kasownik-view-memberlist'
     cache_data = mc.get(cache_key)
     if not cache_data:
-        active_members = models.Member.query.order_by(models.Member.username).filter_by(active=True)
+        active_members = models.Member.get_members(True).filter_by(active=True)
         cache_data = []
         for member in active_members:
             element = {}
@@ -44,8 +44,8 @@ def memberlist():
 @app.route("/admin")
 @login_required
 def index():
-    inactive_members = models.Member.get_members(True).order_by(models.Member.username).filter_by(active=True)
-    active_members = models.Member.get_members(True).order_by(models.Member.username).filter_by(active=False)
+    inactive_members = models.Member.get_members(True).filter_by(active=True)
+    active_members = models.Member.get_members(True).filter_by(active=False)
     for member in active_members:
         due = member.months_due()
         if due < 1:
@@ -184,7 +184,7 @@ def match(username, uid, months):
 @app.route("/member/<username>")
 @login_required
 def member_info(username):
-    member = models.Member.query.filter_by(username=username).first()
+    member = models.Member.get_members().filter_by(username=username).first()
     if not member:
         return "no such member! :("
     amount_due = 100 * member.months_due()

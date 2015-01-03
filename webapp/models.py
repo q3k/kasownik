@@ -49,9 +49,9 @@ class Member(db.Model):
         """
         if deep:
             return kls.query.options(subqueryload_all(kls.transfers,
-                MemberTransfer.transfer))
+                MemberTransfer.transfer)).order_by(kls.username)
         else:
-            return kls.query
+            return kls.query.order_by(kls.username)
 
     def get_last_paid(self):
         year, month, oldest = 0, 0, 0
