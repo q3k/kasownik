@@ -87,6 +87,6 @@ $(window).load(function() {
                return (1900 + date.getYear()) + '/' + date.getMonth();
             }
         });
-    }, 200);
+    }, 1000);
 });
 

@@ -1,12 +1,13 @@
 # - * - coding=utf-8 - * -
 
 import datetime
+import json
 import requests
 import re
 from email.mime.text import MIMEText
 from subprocess import Popen, PIPE
 
-from webapp import app, forms, User, db, models
+from webapp import app, forms, User, db, models, mc
 from flask.ext.login import login_user, login_required, logout_user
 from flask import request, redirect, flash, render_template, url_for
 import banking
@@ -16,6 +17,28 @@ import logic
 @app.route('/')
 def stats():
     return render_template('stats.html')
+
+@app.route('/memberlist')
+def memberlist():
+    cache_key = 'kasownik-view-memberlist'
+    cache_data = mc.get(cache_key)
+    if not cache_data:
+        active_members = models.Member.query.order_by(models.Member.username).filter_by(active=True)
+        cache_data = []
+        for member in active_members:
+            element = {}
+            md = member.months_due()
+            if md > 3:
+                continue
+            element['months_due'] = md
+            element['username'] = member.username
+            element['type'] = member.type
+            first_transfer = member.transfers[0].transfer
+            element['since'] = first_transfer.date
+            cache_data.append(element)
+        mc.set(cache_key, cache_data)
+    return render_template('memberlist.html',
+                           active_members=cache_data)
 
 
 @app.route("/admin")
@@ -41,7 +64,6 @@ def index():
             member.color = "FF0000"
 
     return render_template("index.html", active_members=active_members, inactive_members=inactive_members)
-
 
 @app.route("/login", methods=["POST", "GET"])
 def login():

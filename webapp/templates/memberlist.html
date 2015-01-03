@@ -1,0 +1,29 @@
+{% extends "root.html" %}
+{% set active_page = "memberlist" %}
+{%block title %}Member List{% endblock %}
+{% block content %}
+<div class="container memberlist">
+    <div class="row">
+        <div class="col-md-4">
+            <h1>Active Members</h1>
+            <p>Membership fees in order, has full access to the space and private mailing lists.</p>
+        </div>
+        <div class="col-md-8">
+            <table class="table">
+                <tr>
+                    <th>Name</th>
+                    <th>Memberhsip type</th>
+                    <th>Member since</th>
+                </tr>
+{% for member in active_members %}
+                <tr>
+                    <td>{{member['username']}}</td>
+                    <td>{{member['type']}}</td>
+                    <td>{{member['since']}}</td>
+                </tr>
+{% endfor %}
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

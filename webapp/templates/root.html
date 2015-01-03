@@ -52,20 +52,23 @@
 {% endfor %}
           </ul>
           <ul class="nav navbar-nav navbar-right">
-            <li><a href="/login"><span class="glyphicon glyphicon-user"></span> Login</a></li>
+            <li><a href="/login"><span class="glyphicon glyphicon-user"></span> Sign in</a></li>
           </ul>
         </div><!--/.nav-collapse -->
       </div>
     </nav>
 
-        {% with messages = get_flashed_messages() %}
-  {% if messages %}
-    <ul class=flashes>
+{% with messages = get_flashed_messages() %}
+    {% if messages %}
+    <div class="flashes">
     {% for message in messages %}
-      <li>{{ message }}</li>
+        <div class="alert alert-info alert-dismissible" role="alert">
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            {{message}}
+        </div>
     {% endfor %}
-    </ul>
-  {% endif %}
+    </div>
+    {% endif %}
 {% endwith %}
 
         {% block content %}{% endblock %}
