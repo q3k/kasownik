@@ -44,8 +44,8 @@ def memberlist():
 @app.route("/admin")
 @login_required
 def index():
-    inactive_members = models.Member.get_members(True).filter_by(active=True)
-    active_members = models.Member.get_members(True).filter_by(active=False)
+    inactive_members = models.Member.get_members(True).filter_by(active=False)
+    active_members = models.Member.get_members(True).filter_by(active=True)
     for member in active_members:
         due = member.months_due()
         if due < 1:

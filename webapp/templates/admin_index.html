@@ -1,35 +1,52 @@
 {% extends "root.html" %}
 {% set active_page = "admin" %}
-{% block title %}members{% endblock %}
+{% block title %}Admin Member List{% endblock %}
 {% block content %}
-        <h2>Operations:</h2>
-            <a href="/fetch">fetch transfers from bre</a><br />
-            <a href="/spam">send monthly report to members</a>
+<div class="container">
+    <div class="row">
+        <div class="col-md-2 operations">
+            <h4>Active operations:</h4>
+            <h4>Available operations:</h4>
+            <p>
+                <form action="/fetch" method="post">
+                    <button type="button" class="btn btn-primary">Fetch transfer data</button>
+                </form>
+                <form action="/spam" method="post">
+                    <button type="button" class="btn btn-primary">Send reminders</button>
+                </form>
+            </p>
+        </div>
         {% for group in active_members|groupby("type") %}
-        <h2>Active members, {{ group.grouper }}:</h2>
-        <ol>
-	    {% for member in group.list  %}
-            <li>
-                <a style="color: #{{ member.color }};" href="/member/{{ member.username }}">{{ member.username }}</a> ({{ member.months_due() }} months due)
-            | <a href="/member/{{ member.username }}/edit">edit</a>
-            | <a href="/member/{{ member.username }}/deactivate">deactivate</a>
-            {% if member.months_due() > 2 %}
-            | <a href="/member/{{ member.username }}/warn">warn</a>
-            {% else %}
-            | <a href="/member/{{ member.username }}/remind">remind</a>
-            {% endif %}
-            </li>
-	    {% endfor %}
-        </ol>
-	{% endfor %}
-        <h2>Inactive members:</h2>
-        <ol>
-        {% for member in inactive_members %}
-            <li>
-               <a style="color: #{{ member.color }};" href="/member/{{ member.username }}">{{ member.username }}</a> ({{ member.months_due() }} months due) 
+        <div class="col-md-5">
+            <h2>Active members, {{ group.grouper }}:</h2>
+            <ol>
+	        {% for member in group.list  %}
+                <li>
+                    <a style="color: #{{ member.color }};" href="/member/{{ member.username }}">{{ member.username }}</a> ({{ member.months_due() }} months due)
                 | <a href="/member/{{ member.username }}/edit">edit</a>
-                | <a href="/member/{{ member.username }}/activate">activate</a>
-            </li>
-        {% endfor %}
-        </ol>
+                | <a href="/member/{{ member.username }}/deactivate">deactivate</a>
+                {% if member.months_due() > 2 %}
+                | <a href="/member/{{ member.username }}/warn">warn</a>
+                {% else %}
+                | <a href="/member/{{ member.username }}/remind">remind</a>
+                {% endif %}
+                </li>
+    	    {% endfor %}
+            </ol>
+        </div>
+	{% endfor %}
+        <div class="col-md-5">
+            <h2>Inactive members:</h2>
+            <ol>
+            {% for member in inactive_members %}
+                <li>
+                   <a style="color: #{{ member.color }};" href="/member/{{ member.username }}">{{ member.username }}</a> ({{ member.months_due() }} months due) 
+                    | <a href="/member/{{ member.username }}/edit">edit</a>
+                    | <a href="/member/{{ member.username }}/activate">activate</a>
+                </li>
+            {% endfor %}
+            </ol>
+        </div>
+    </div>
+</div>
 {% endblock %}

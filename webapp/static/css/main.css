@@ -74,3 +74,7 @@ body {
 .memberlist h1 {
     font-size: 2em;
 }
+
+.operations button {
+    margin: 4px;
+}
