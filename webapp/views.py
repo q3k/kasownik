@@ -7,7 +7,7 @@ import re
 from email.mime.text import MIMEText
 from subprocess import Popen, PIPE
 
-from webapp import app, forms, User, db, models, mc
+from webapp import app, forms, User, db, models, mc, cache_enabled
 from flask.ext.login import login_user, login_required, logout_user
 from flask import request, redirect, flash, render_template, url_for
 import banking
@@ -22,22 +22,16 @@ def stats():
 def memberlist():
     cache_key = 'kasownik-view-memberlist'
     cache_data = mc.get(cache_key)
-    if not cache_data:
-        active_members = models.Member.get_members(True).filter_by(active=True)
+    if not cache_data or not cache_enabled:
+        members = models.Member.get_members(True)
         cache_data = []
-        for member in active_members:
-            element = {}
-            md = member.months_due()
-            if md > 3:
+        for member in members:
+            element = member.get_status()
+            if element['payment_status'] != models.PaymentStatus.okay:
                 continue
-            element['months_due'] = md
-            element['username'] = member.username
-            element['type'] = member.type
-            first_transfer = member.transfers[0].transfer
-            element['since'] = first_transfer.date
             cache_data.append(element)
         mc.set(cache_key, cache_data)
-    return render_template('memberlist.html',
+        return render_template('memberlist.html',
                            active_members=cache_data)
 
 

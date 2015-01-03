@@ -13,6 +13,7 @@ db = SQLAlchemy(app)
 login_manager = LoginManager()
 login_manager.init_app(app)
 mc = memcache.Client(app.config['MEMCACHE_SERVERS'], debug=0)
+cache_enabled = False
 
 
 import webapp.models
