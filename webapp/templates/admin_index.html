@@ -22,10 +22,10 @@
             <ol>
 	        {% for member in group.list  %}
                 <li>
-                    <a style="color: #{{ member.color }};" href="/member/{{ member.username }}">{{ member.username }}</a> ({{ member.months_due() }} months due)
+                    <a style="color: #{{ member.color }};" href="/member/{{ member.username }}">{{ member.username }}</a> ({{ member.months_due }} months due)
                 | <a href="/member/{{ member.username }}/edit">edit</a>
                 | <a href="/member/{{ member.username }}/deactivate">deactivate</a>
-                {% if member.months_due() > 2 %}
+                {% if member.months_due > 2 %}
                 | <a href="/member/{{ member.username }}/warn">warn</a>
                 {% else %}
                 | <a href="/member/{{ member.username }}/remind">remind</a>
@@ -40,7 +40,7 @@
             <ol>
             {% for member in inactive_members %}
                 <li>
-                   <a style="color: #{{ member.color }};" href="/member/{{ member.username }}">{{ member.username }}</a> ({{ member.months_due() }} months due) 
+                   <a style="color: #{{ member.color }};" href="/member/{{ member.username }}">{{ member.username }}</a> ({{ member.months_due }} months due) 
                     | <a href="/member/{{ member.username }}/edit">edit</a>
                     | <a href="/member/{{ member.username }}/activate">activate</a>
                 </li>

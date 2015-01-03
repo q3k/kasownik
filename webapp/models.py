@@ -45,10 +45,22 @@ class Member(db.Model):
     username = db.Column(db.String(64), unique=True)
     type = db.Column(db.Enum("starving", "fatty", name="member_types"))
     transfers = db.relationship("MemberTransfer",order_by=[db.asc(MemberTransfer.year), db.asc(MemberTransfer.month)])
+    # old field
     active = db.Column(db.Boolean)
     api_keys = db.relationship("APIKey")
     join_year = db.Column(db.Integer)
     join_month = db.Column(db.Integer)
+    ldap_username = db.Column(db.String(64), unique=True)
+    # Normal - standard 3 months grace period
+    # Extended Grace Perioud - do not shut off account after grace period
+    # Potato - do not ever shut off account, report falsified payment status
+    # Disabled - manual disable override, regardless of payment extra
+    payment_policy = db.Column(db.Enum('Normal',
+                                       'Extended Grace Period',
+                                       'Potato',
+                                       'Disabled',
+                                       name='payment_policy_types'))
+    preferred_email = db.Column(db.String(64))
 
     @classmethod
     def get_members(kls, deep=False):
@@ -80,9 +92,10 @@ class Member(db.Model):
         del now_date
 
         status = {}
-        status['ldap_username'] = self.get_ldap_username()
+        status['ldap_username'] = self.ldap_username
         status['username'] = self.username
         status['type'] = self.type
+        status['payment_policy'] = self.payment_policy
         # First check - did we actually get any transfers?
         if not self.transfers or self.transfers[0].transfer.uid == app.config['DUMMY_TRANSFER_UID']:
             status['payment_status'] = PaymentStatus.never_paid
@@ -94,6 +107,7 @@ class Member(db.Model):
             else:
                 status['joined'] = (None, None)
                 status['next_unpaid'] = (None, None)
+            self._apply_judgement(status)
             return status
 
         # Use the join date from SQL, if available
@@ -128,7 +142,7 @@ class Member(db.Model):
             # Is this the first transfer? See if it was done on time
             if previous_uid is None:
                 unpaid_months += (this_scalar - joined_scalar)
-                    
+
             # Apply any missing payments
             if active_payment and previous_uid is not None:
                 unpaid_months += (this_scalar - previous_scalar) - 1
@@ -139,10 +153,15 @@ class Member(db.Model):
                 most_recent_transfer = this_transfer
 
             active_payment = True
-            
+
             previous_transfer = this_transfer
             previous_uid = this_uid
 
+        
+        # Apply missing payments from now
+        if active_payment:
+            previous_scalar = self._yearmonth_scalar(previous_transfer)
+            unpaid_months += (now - previous_scalar)
 
         status['months_due'] = unpaid_months
         status['payment_status'] = PaymentStatus.okay if unpaid_months < 4 else PaymentStatus.unpaid
@@ -153,6 +172,7 @@ class Member(db.Model):
         else:
             status['next_unpaid'] = self._yearmonth_increment(status['last_paid'])
 
+        self._apply_judgement(status)
         return status
 
 
@@ -167,6 +187,22 @@ class Member(db.Model):
             cache_data = self._get_status_uncached()
             mc.set(cache_key, json.dumps(cache_data))
         return cache_data
+
+    def _apply_judgement(self, status):
+        """Check your priviledge, you cisnormative shitlord!"""
+        policy = status['payment_policy']
+        if policy == 'Normal':
+            if status['payment_status'] == PaymentStatus.okay:
+                status['judgement'] = True
+            else:
+                status['judgement'] = False
+        elif policy == 'Extended Grace Period':
+            status['judgement'] = True
+        elif policy == 'Potato':
+            status['judgement'] = True
+            status['months_due'] = 0
+        else:
+            status['judgement'] = False
 
     def get_months_due(self):
         status = self.get_status()
@@ -189,6 +225,7 @@ class Member(db.Model):
         now_date = datetime.datetime.now()
         self.join_year = now_date.year
         self.join_month = now_date.month
+
 
 class Transfer(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -227,7 +264,7 @@ class Transfer(db.Model):
         member = Member.query.filter_by(username=member_name).first()
         if not member:
             return self.MATCH_NO_USER, member_name
-        
+
         if (title[1] == 'starving' and self.amount > 50) or (title[1] == 'fatty' and self.amount > 100):
             return self.MATCH_WRONG_TYPE, member
 

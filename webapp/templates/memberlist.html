@@ -12,12 +12,12 @@
             <table class="table">
                 <tr>
                     <th>Name</th>
-                    <th>Memberhsip type</th>
+                    <th>Membership type</th>
                     <th>Member since</th>
                 </tr>
 {% for member in active_members %}
                 <tr>
-                    <td>{{member['username']}}</td>
+                    <td>{{member['ldap_username']}}</td>
                     <td>{{member['type']}}</td>
                     <td>{{member['joined'][0]}}/{{member['joined'][1]}}</td>
                 </tr>

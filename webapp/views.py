@@ -38,24 +38,18 @@ def memberlist():
 @app.route("/admin")
 @login_required
 def index():
-    inactive_members = models.Member.get_members(True).filter_by(active=False)
-    active_members = models.Member.get_members(True).filter_by(active=True)
-    for member in active_members:
-        due = member.months_due()
+    members = [m.get_status() for m in models.Member.get_members(True)]
+    for member in members:
+        due = member['months_due']
         if due < 1:
-            member.color = "00FF00"
+            member['color'] = "00FF00"
         elif due < 3:
-            member.color = "E0941B"
+            member['color'] = "E0941B"
         else:
-            member.color = "FF0000"
-    for member in inactive_members:
-        due = member.months_due()
-        if due < 1:
-            member.color = "00FF00"
-        elif due < 3:
-            member.color = "E0941B"
-        else:
-            member.color = "FF0000"
+            member['color'] = "FF0000"
+    
+    active_members = filter(lambda m: m['judgement'], members)
+    inactive_members = filter(lambda m: not m['judgement'], members)
 
     return render_template("admin_index.html",
                            active_members=active_members,
