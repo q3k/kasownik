@@ -5,6 +5,13 @@ Jinja2==2.7.3
 MarkupSafe==0.23
 WTForms==2.0.1
 Werkzeug==0.9.6
+amqp==1.4.6
+anyjson==0.3.3
+billiard==3.3.0.19
 cached-property==0.1.5
+celery==3.1.17
 itsdangerous==0.24
+kombu==3.0.24
+python-memcached==1.53
+pytz==2014.10
 wsgiref==0.1.2
