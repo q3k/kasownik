@@ -3,17 +3,16 @@
 {% block title %}Stats{% endblock %}
 {% block extraheader %}
 <link rel="stylesheet" href="/static/css/rickshaw.css">
-{% endblock %}
-{% block extrajs %}
 <script src="/static/js/d3.min.js"></script>
 <script src="/static/js/d3.layout.min.js"></script>
 <script src="/static/js/rickshaw.min.js"></script>
 <script src="/static/js/plot.js"></script>
 {% endblock %}
 {% block content %}
-    <div class="stats">
-        <div id="legend"></div>
-        <div id="plot"></div>
-        Last modified: <span id="lastmod">-</span>
-    </div>
+<div class="container-fluid stats">
+    <h1>Payment Stats</h1>
+    <h4 id="lastmod">Loding...</h4>
+    <div id="legend"></div>
+    <div id="plot"></div>
+</div>
 {% endblock %}

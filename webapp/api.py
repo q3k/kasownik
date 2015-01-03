@@ -6,12 +6,13 @@ from sqlalchemy import and_
 
 from flask import request, abort, Response
 
-from webapp import models, app
+from webapp import models, app, mc
 
 class APIError(Exception):
     def __init__(self, message, code=500):
         self.message = message
         self.code = code
+
 
 def _public_api_method(path):
     """A decorator that adds a public, GET based method at /api/<path>.json.
@@ -29,6 +30,7 @@ def _public_api_method(path):
                 code = e.code
                 status = "error"
             except Exception as e:
+                raise
                 content = "Internal server error."
                 code = 500
                 status = "error"
@@ -130,6 +132,11 @@ def api_member():
     return response
 
 def _stats_for_month(year, month):
+    cache_key = 'kasownik-stats_for_month-{}-{}'.format(year, month)
+    cache_data = mc.get(cache_key)
+    if cache_data:
+        cache_data = json.loads(cache_data)
+        return cache_data[0], cache_data[1]
     # TODO: export this to the config
     money_required = 4800
     money_paid = 0
@@ -139,7 +146,7 @@ def _stats_for_month(year, month):
         amount_all = mt.transfer.amount
         amount = amount_all / len(mt.transfer.member_transfers)
         money_paid += amount
-
+    mc.set(cache_key, json.dumps([money_required, money_paid/100]))
     return money_required, money_paid/100
 
 @_public_api_method("month/<year>/<month>")
@@ -156,6 +163,10 @@ def api_manamana(year=None, month=None):
 
 @_public_api_method("months_due/<membername>")
 def api_months_due(membername):
+    cache_key = 'kasownik-months_due-{}'.format(membername)
+    cache_data = mc.get(cache_key)
+    if cache_data:
+        return cache_data
     member = models.Member.query.filter_by(username=membername).first()
     if not member:
         raise APIError("No such member.", 404)
@@ -168,16 +179,23 @@ def api_months_due(membername):
     #now = datetime.datetime.now()
     #then_timestamp = year * 12 + (month-1)
     #now_timestamp = now.year * 12 + (now.month-1)
+    mc.set(cache_key, due)
     return due
 
 @_public_api_method("cashflow/<int:year>/<int:month>")
 def api_cashflow(year, month):
-    start = datetime.date(year=year, month=month, day=1)
-    month += 1
-    if month > 12:
-        month = 1
-        year += 1
-    end = datetime.date(year=year, month=month, day=1)
-    transfers = models.Transfer.query.filter(and_(models.Transfer.date >= start, models.Transfer.date < end)).all()
-    amount_in = sum(t.amount for t in transfers)
+    cache_key = 'kasownik-cashflow-{}-{}'.format(year, month)
+    cache_data = mc.get(cache_key)
+    if cache_data:
+        amount_in = cache_data
+    else:
+        start = datetime.date(year=year, month=month, day=1)
+        month += 1
+        if month > 12:
+            month = 1
+            year += 1
+        end = datetime.date(year=year, month=month, day=1)
+        transfers = models.Transfer.query.filter(and_(models.Transfer.date >= start, models.Transfer.date < end)).all()
+        amount_in = sum(t.amount for t in transfers)
+        mc.set(cache_key, amount_in)
     return {"in": amount_in/100, "out": -1}

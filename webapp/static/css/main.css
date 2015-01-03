@@ -7,7 +7,20 @@ body {
 }
 
 .stats {
-  
+  padding: 40px 15px;
+}
+
+.stats h1 {
+  text-align: center;
+}
+
+.stats h4 {
+  text-align: center;
+}
+
+#plot {
+  margin-left: 10%;
+  width: 80%;
 }
 
 #legend {
