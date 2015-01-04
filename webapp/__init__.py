@@ -33,7 +33,7 @@ login_manager.anonymous_user = AnonymousUser
 
 class User(object):
     def __init__(self, username):
-        self.username = username
+        self.username = username.lower().strip()
         self._admin = None
 
     def is_authenticated(self):
