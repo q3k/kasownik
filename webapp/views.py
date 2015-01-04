@@ -8,7 +8,7 @@ from email.mime.text import MIMEText
 from subprocess import Popen, PIPE
 
 from webapp import app, forms, User, db, models, mc, cache_enabled, admin_required
-from flask.ext.login import login_user, login_required, logout_user
+from flask.ext.login import login_user, login_required, logout_user, current_user
 from flask import request, redirect, flash, render_template, url_for, abort, g
 import banking
 import logic
@@ -35,6 +35,16 @@ def memberlist():
         return render_template('memberlist.html',
                            active_members=cache_data)
 
+@app.route('/profile')
+@login_required
+def self_profile():
+    member = models.Member.get_members(True).filter_by(ldap_username=current_user.username).first()
+    if not member:
+        abort(404)
+    status = member.get_status()
+    cn = directory.get_member_fields(g.ldap, member.ldap_username, 'cn')['cn']
+    return render_template("admin_member.html", member=member, status=status,
+                           cn=cn, admin=False)
 
 @app.route("/admin")
 @admin_required
@@ -165,7 +175,7 @@ def admin_member(username):
     status = member.get_status()
     cn = directory.get_member_fields(g.ldap, member.ldap_username, 'cn')['cn']
     return render_template("admin_member.html", member=member, status=status,
-                           cn=cn)
+                           cn=cn, admin=True)
 
 @app.route("/add/<type>/<username>")
 @admin_required

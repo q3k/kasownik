@@ -1,6 +1,11 @@
 {% extends "root.html" %}
+{% if admin %}
 {% set active_page = "admin" %}
-{% block title %}{{member.username}}{% endblock %}
+{% else %}
+{% set active_page = "profile" %}
+{% endif %}
+
+{% block title %}{% if admin %}{{member.ldap_username}}{%else%}Profile{%endif%}{% endblock %}
 {% block content %}
 <div class="container">
     <div class="row">
@@ -15,10 +20,17 @@
                 <span class="label label-danger">Inactive</span><br/><br/>
                 {% endif %}
             </p>
+            {% if admin %}
             <h4>Payment Policy</h4>
             {% include "button_payment_policy.html" %}
             <h4>Membership Type</h4>
             {% include "button_membership_type.html" %}
+            {% else %}
+            <h4>Payment Policy</h4>
+            <h5>{{status.payment_policy}}</h5>
+            <h4>Membership Type</h4>
+            <h5>{{status.type}}</h5>
+            {% endif %}
         </div>
         <div class="col-md-9">
             <h3>Judgement Engine™</h3>
