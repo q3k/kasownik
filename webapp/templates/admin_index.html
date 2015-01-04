@@ -3,12 +3,6 @@
 {% block title %}Admin Member List{% endblock %}
 {% block content %}
 
-{% set policy_buttons = {
-    'Normal': 'success',
-    'Extended Grace Period': 'warning',
-    'Potato': 'primary',
-    'Disabled': 'danger'
-} -%}
 <div class="container">
     <div class="row">
         <div class="col-md-2 operations">
@@ -46,19 +40,7 @@
                             {{member.months_due}}
                         </span>
                     </td>
-                    <td>
-                        <div class="btn-group">
-                            <button type="button" class="btn btn-{{policy_buttons[member.payment_policy]}} btn-xs dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
-                                {{member.payment_policy}} <span class="caret"></span>
-                            </button>
-                            <ul class="dropdown-menu" role="menu">
-                                <li><a href="/admin/member/{{member.ldap_username}}/policy:normal">Normal</a></li>
-                                <li><a href="/admin/member/{{member.ldap_username}}/policy:normal">Extended Grace Period</a></li>
-                                <li><a href="/admin/member/{{member.ldap_username}}/policy:normal">Potato</a></li>
-                                <li><a href="/admin/member/{{member.ldap_username}}/policy:normal">Disabled</a></li>
-                            </ul>
-                        </div>
-                    </td>
+                    <td>{% include "button_payment_policy.html" %}</td>
                 </tr>
                 {% endfor %}
             </table>
@@ -86,20 +68,8 @@
                             {{member.months_due}}
                         </span>
                     </td>
-                    <td>
-                        <div class="btn-group">
-                            <button type="button" class="btn btn-{{policy_buttons[member.payment_policy]}} btn-xs dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
-                                {{member.payment_policy}} <span class="caret"></span>
-                            </button>
-                            <ul class="dropdown-menu" role="menu">
-                                <li><a href="/admin/member/{{member.ldap_username}}/policy:normal">Normal</a></li>
-                                <li><a href="/admin/member/{{member.ldap_username}}/policy:normal">Extended Grace Period</a></li>
-                                <li><a href="/admin/member/{{member.ldap_username}}/policy:normal">Potato</a></li>
-                                <li><a href="/admin/member/{{member.ldap_username}}/policy:normal">Disabled</a></li>
-                            </ul>
-                        </div>
-                    </td>
-</tr>
+                    <td>{% include "button_payment_policy.html" %}</td>
+                </tr>
             {% endfor %}
             </table>
         </div>

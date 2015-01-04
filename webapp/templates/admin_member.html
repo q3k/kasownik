@@ -1,0 +1,61 @@
+{% extends "root.html" %}
+{% set active_page = "admin" %}
+{% block title %}{{member.username}}{% endblock %}
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-md-4">
+            <h1>{{member.ldap_username}}</h1>
+            <p>
+                {% if status.judgement %}
+                <span class="label label-success">Active</span><br/><br/>
+                {% else %}
+                <span class="label label-danger">Inactive</span><br/><br/>
+                {% endif %}
+            </p>
+            <h4>Payment Policy</h4>
+            {% include "button_payment_policy.html" %}
+            <h4>Membership Type</h4>
+            {% include "button_membership_type.html" %}
+        </div>
+        <div class="col-md-8">
+            <h3>Judgement Engine™</h3>
+            <p>
+            {%if status.last_paid[0] == None %}
+                Has <b>never paid</b>,
+                {% if member.payment_policy == "Normal" %}
+                    and has no special priviledge, so is <b>INACTIVE</b>.
+                {% elif member.payment_policy == "Disabled" %}
+                    and is disabled, so is <b>INACTIVE</b>.
+                {% else %}
+                    but has special privileges ({{member.payment_policy}}), so is <b>ACTIVE</b>.
+                {% endif %}
+            {%else%}
+                Has paid at least once,
+                {% if status.left %}
+                    but has since left the hackerspace, so is <b>INACTIVE</b>.
+                {% else %}
+                    {% if member.payment_policy == "Potato" %}
+                        and is a potato, so is <b>ACTIVE</b>.
+                    {% elif member.payment_policy == "Disabled" %}
+                        but has been manually disabled, so is <b>INACTIVE</b>.
+                    {% else %}
+                        and needs to pay <b>{{status.months_due}} month(s)</b> worth of fees
+                        {% if member.payment_policy == "Normal" %}
+                            {% if status.judgement %}
+                                (which is within tolerance), so is <b>ACTIVE</b>.
+                            {% else %}
+                                (which is <b>overdue</b>), so is <b>INACTIVE</b>.
+                            {% endif %}
+                        {% else %}
+                            . {{member.ldap_username}} Is in Extended Grace Period, so is <b>ACTIVE</b>.
+                        {% endif %}
+                    {% endif %}
+                {% endif %}
+            {%endif%}
+            </p>
+            <h3>Transfers</h3>
+        </div>
+    </div>
+</div>
+{% endblock %}

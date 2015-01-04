@@ -1,0 +1,13 @@
+{% set membership_buttons = {
+    'fatty': 'success',
+    'starving': 'warning'
+} -%}
+<div class="btn-group">
+    <button type="button" class="btn btn-{{membership_buttons[member.type]}} btn-xs dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
+        {{member.type|capitalize}} <span class="caret"></span>
+    </button>
+    <ul class="dropdown-menu" role="menu">
+        <li><a href="/admin/member/{{member.ldap_username}}/membership:fatty">Fatty (100PLN p/m)</a></li>
+        <li><a href="/admin/member/{{member.ldap_username}}/membership:starving">Starving (50PLN p/m)</a></li>
+    </ul>
+</div>

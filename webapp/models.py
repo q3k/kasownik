@@ -197,7 +197,7 @@ class Member(db.Model):
             return
         policy = status['payment_policy']
         if policy == 'Normal':
-            if status['payment_status'] == PaymentStatus.okay:
+            if status['payment_status'] == PaymentStatus.okay and status['last_paid'][0] is not None:
                 status['judgement'] = True
             else:
                 status['judgement'] = False

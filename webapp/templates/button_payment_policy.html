@@ -1,0 +1,17 @@
+{% set policy_buttons = {
+    'Normal': 'success',
+    'Extended Grace Period': 'warning',
+    'Potato': 'primary',
+    'Disabled': 'danger'
+} -%}
+<div class="btn-group">
+    <button type="button" class="btn btn-{{policy_buttons[member.payment_policy]}} btn-xs dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
+        {{member.payment_policy}} <span class="caret"></span>
+    </button>
+    <ul class="dropdown-menu" role="menu">
+        <li><a href="/admin/member/{{member.ldap_username}}/policy:normal">Normal</a></li>
+        <li><a href="/admin/member/{{member.ldap_username}}/policy:extended">Extended Grace Period</a></li>
+        <li><a href="/admin/member/{{member.ldap_username}}/policy:potato">Potato</a></li>
+        <li><a href="/admin/member/{{member.ldap_username}}/policy:disabled">Disabled</a></li>
+    </ul>
+</div>

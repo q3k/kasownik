@@ -9,7 +9,7 @@ from subprocess import Popen, PIPE
 
 from webapp import app, forms, User, db, models, mc, cache_enabled
 from flask.ext.login import login_user, login_required, logout_user
-from flask import request, redirect, flash, render_template, url_for
+from flask import request, redirect, flash, render_template, url_for, abort
 import banking
 import logic
 
@@ -72,26 +72,6 @@ def login():
 @login_required
 def logout():
     logout_user()
-    return redirect(url_for("index"))
-
-
-@app.route("/member/<membername>/activate")
-@login_required
-def member_activate(membername):
-    member = models.Member.query.filter_by(username=membername).first()
-    member.active = True
-    db.session.add(member)
-    db.session.commit()
-    return redirect(url_for("index"))
-
-
-@app.route("/member/<membername>/deactivate")
-@login_required
-def member_deactivate(membername):
-    member = models.Member.query.filter_by(username=membername).first()
-    member.active = False
-    db.session.add(member)
-    db.session.commit()
     return redirect(url_for("index"))
 
 
@@ -169,16 +149,14 @@ def match(username, uid, months):
     db.session.commit()
     return "ok, %i PLN get!" % transfer.amount
 
-@app.route("/member/<username>")
+@app.route("/admin/member/<username>")
 @login_required
-def member_info(username):
-    member = models.Member.get_members().filter_by(username=username).first()
+def admin_member(username):
+    member = models.Member.get_members().filter_by(ldap_username=username).first()
     if not member:
-        return "no such member! :("
-    amount_due = 100 * member.months_due()
-    if member.type == "starving":
-        amount_due = 50 * member.months_due()
-    return render_template("member_info.html", member=member, amount_due=amount_due)
+        abort(404)
+    status = member.get_status()
+    return render_template("admin_member.html", member=member, status=status)
 
 @app.route("/add/<type>/<username>")
 @login_required
