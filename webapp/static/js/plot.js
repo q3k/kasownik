@@ -1,3 +1,27 @@
+var populate_month_callback = function(year, month, required, paid, modified) {
+    var populate_month = function(data) {
+        var res = data.content,
+            date = new Date(year, month, 1);
+            modified = modified || data.modified;
+
+        console.log("month " + year + " " + month);
+        required.unshift({ x: date.getTime() / 1000, y: res.required });
+        paid.unshift({ x: date.getTime() / 1000, y: res.paid });
+
+    };
+    return populate_month;
+};
+
+var populate_influx_callback = function(year, month, influx) {
+    var populate_influx = function(data) {
+        var res = data.content,
+            date = new Date(year, month, 1);
+
+        influx.unshift({ x: date.getTime() / 1000, y: res.in });
+    };
+    return populate_influx;
+};
+
 $(window).load(function() {
     var required = [], paid = [], influx = [];
     var today = new Date(),
@@ -6,36 +30,24 @@ $(window).load(function() {
         urlBase = '/api/',
         modified;
     
-    // This is a hack so that the page loads before we try to load the plot
-    // (which seems to make chrome sloooow)
-    // Also I'm not a web developer.
-    setTimeout(function(){
-        for(var i = 0; i < 28; ++i) {
-            var xhr = new XMLHttpRequest();
-            xhr.open("GET", urlBase + 'month/'+ year + '/' + month + '.json', false);
-            xhr.send();
-        
-            var data = JSON.parse(xhr.response),
-                res = data.content,
-                date = new Date(year, month, 1);
-                modified = modified || data.modified;
-        
-            required.unshift({ x: date.getTime() / 1000, y: res.required });
-            paid.unshift({ x: date.getTime() / 1000, y: res.paid });
+    var requests = [];
+    for(var i = 0; i < 28; ++i) {
+        var url = urlBase + 'month/' + year + '/' + month + '.json';
+        requests.push($.getJSON(url,
+                                populate_month_callback(year, month,
+                                                        required, paid,
+                                                        modified)));
 
-            xhr = new XMLHttpRequest();
-            xhr.open("GET", urlBase + 'cashflow/'+ year + '/' + month + '.json', false);
-            xhr.send();
-        
-            res = JSON.parse(xhr.response).content,
-            influx.unshift({ x: date.getTime() / 1000, y: res.in });
-            month -= 1;
-            if(month == 0) {
-                month = 12;
-                year -= 1;
-            }
+        url = urlBase + 'cashflow/' + year + '/' + month + '.json';
+        requests.push($.getJSON(url, populate_influx_callback(year, month, influx)));
+
+        month -= 1;
+        if(month == 0) {
+            month = 12;
+            year -= 1;
         }
-        
+    }
+    $.when.apply($, requests).then(function() {
         var lastmod = document.getElementById("lastmod");
         lastmod.innerHTML = "Last Modified " + modified;
 
@@ -87,6 +99,6 @@ $(window).load(function() {
                return (1900 + date.getYear()) + '/' + date.getMonth();
             }
         });
-    }, 1000);
+    });
 });
 
