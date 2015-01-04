@@ -52,7 +52,11 @@
 {% endfor %}
           </ul>
           <ul class="nav navbar-nav navbar-right">
+            {% if current_user.is_authenticated() %}
+            <li><a href="/logout"><span class="glyphicon glyphicon-user"></span> <b>{{current_user.username}}</b>{% if current_user.is_admin() %} (g0t r00t){% endif %}</a></li>
+            {% else %}
             <li><a href="/login"><span class="glyphicon glyphicon-user"></span> Sign in</a></li>
+            {% endif %}
           </ul>
         </div><!--/.nav-collapse -->
       </div>

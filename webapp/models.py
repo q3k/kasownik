@@ -52,7 +52,7 @@ class Member(db.Model):
     join_month = db.Column(db.Integer)
     ldap_username = db.Column(db.String(64), unique=True)
     # Normal - standard 3 months grace period
-    # Extended Grace Perioud - do not shut off account after grace period
+    # Extended Grace Period - do not shut off account after grace period
     # Potato - do not ever shut off account, report falsified payment status
     # Disabled - manual disable override, regardless of payment extra
     payment_policy = db.Column(db.Enum('Normal',

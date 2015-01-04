@@ -2,6 +2,13 @@
 {% set active_page = "admin" %}
 {% block title %}Admin Member List{% endblock %}
 {% block content %}
+
+{% set policy_buttons = {
+    'Normal': 'success',
+    'Extended Grace Period': 'warning',
+    'Potato': 'primary',
+    'Disabled': 'danger'
+} -%}
 <div class="container">
     <div class="row">
         <div class="col-md-2 operations">
@@ -19,33 +26,82 @@
         {% for group in active_members|groupby("type") %}
         <div class="col-md-5">
             <h2>Active members, {{ group.grouper }}:</h2>
-            <ol>
-	        {% for member in group.list  %}
-                <li>
-                    <a style="color: #{{ member.color }};" href="/member/{{ member.username }}">{{ member.username }}</a> ({{ member.months_due }} months due)
-                | <a href="/member/{{ member.username }}/edit">edit</a>
-                | <a href="/member/{{ member.username }}/deactivate">deactivate</a>
-                {% if member.months_due > 2 %}
-                | <a href="/member/{{ member.username }}/warn">warn</a>
-                {% else %}
-                | <a href="/member/{{ member.username }}/remind">remind</a>
-                {% endif %}
-                </li>
-    	    {% endfor %}
-            </ol>
+            <table class="table table-striped">
+                <tr>
+                    <th>#</th>
+                    <th>LDAP Username</th>
+                    <th>Months Due</th>
+                    <th>Payment Policy</th>
+                </tr>
+                {% for member in group.list  %}
+                <tr>
+                    <td>{{loop.index}}.</td>
+                    <td>
+                        <a href="/admin/member/{{member.ldap_username}}">
+                            <b>{{member.ldap_username}}</b>
+                        </a>
+                    </td>
+                    <td>
+                        <span class="badge" style="background-color: #{{member.color}}">
+                            {{member.months_due}}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="btn-group">
+                            <button type="button" class="btn btn-{{policy_buttons[member.payment_policy]}} btn-xs dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
+                                {{member.payment_policy}} <span class="caret"></span>
+                            </button>
+                            <ul class="dropdown-menu" role="menu">
+                                <li><a href="/admin/member/{{member.ldap_username}}/policy:normal">Normal</a></li>
+                                <li><a href="/admin/member/{{member.ldap_username}}/policy:normal">Extended Grace Period</a></li>
+                                <li><a href="/admin/member/{{member.ldap_username}}/policy:normal">Potato</a></li>
+                                <li><a href="/admin/member/{{member.ldap_username}}/policy:normal">Disabled</a></li>
+                            </ul>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </table>
         </div>
-	{% endfor %}
+        {% endfor %}
         <div class="col-md-5">
             <h2>Inactive members:</h2>
-            <ol>
+            <table class="table table-striped">
+                <tr>
+                    <th>#</th>
+                    <th>LDAP Username</th>
+                    <th>Months Due</th>
+                    <th>Payment Policy</th>
+                </tr>
             {% for member in inactive_members %}
-                <li>
-                   <a style="color: #{{ member.color }};" href="/member/{{ member.username }}">{{ member.username }}</a> ({{ member.months_due }} months due) 
-                    | <a href="/member/{{ member.username }}/edit">edit</a>
-                    | <a href="/member/{{ member.username }}/activate">activate</a>
-                </li>
+                <tr>
+                    <td>{{loop.index}}.</td>
+                    <td>
+                        <a href="/admin/member/{{member.ldap_username}}">
+                            <b>{{member.ldap_username}}</b>
+                        </a>
+                    </td>
+                    <td>
+                        <span class="badge" style="background-color: #{{member.color}}">
+                            {{member.months_due}}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="btn-group">
+                            <button type="button" class="btn btn-{{policy_buttons[member.payment_policy]}} btn-xs dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
+                                {{member.payment_policy}} <span class="caret"></span>
+                            </button>
+                            <ul class="dropdown-menu" role="menu">
+                                <li><a href="/admin/member/{{member.ldap_username}}/policy:normal">Normal</a></li>
+                                <li><a href="/admin/member/{{member.ldap_username}}/policy:normal">Extended Grace Period</a></li>
+                                <li><a href="/admin/member/{{member.ldap_username}}/policy:normal">Potato</a></li>
+                                <li><a href="/admin/member/{{member.ldap_username}}/policy:normal">Disabled</a></li>
+                            </ul>
+                        </div>
+                    </td>
+</tr>
             {% endfor %}
-            </ol>
+            </table>
         </div>
     </div>
 </div>
