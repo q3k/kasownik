@@ -4,7 +4,7 @@ import memcache
 import requests
 import sqltap.wsgi
 
-from flask import Flask
+from flask import Flask, redirect
 from flask.ext.sqlalchemy import SQLAlchemy
 from flask.ext.login import LoginManager, AnonymousUserMixin, login_required, current_user
 from flaskext.gravatar import Gravatar
@@ -74,6 +74,9 @@ def admin_required(f):
 import webapp.views
 import webapp.api
 
+@login_manager.unauthorized_handler
+def unauthorized():
+    return redirect('/login')
 
 def init():
     pass
