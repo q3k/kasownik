@@ -5,6 +5,7 @@ import sqltap.wsgi
 from flask import Flask
 from flask.ext.sqlalchemy import SQLAlchemy
 from flask.ext.login import LoginManager, AnonymousUserMixin
+from flaskext.gravatar import Gravatar
 
 app = Flask(__name__)
 app.config.from_object("config.CurrentConfig")
@@ -14,6 +15,7 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 mc = memcache.Client(app.config['MEMCACHE_SERVERS'], debug=0)
 cache_enabled = False
+gravatar = Gravatar(app, size=256, rating='g', default='retro', force_default=False, use_ssl=True, base_url=None)
 
 
 import webapp.models

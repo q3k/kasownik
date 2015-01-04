@@ -5,6 +5,7 @@
 <div class="container">
     <div class="row">
         <div class="col-md-3">
+            <img src="{{ member.get_contact_email() | gravatar }}" alt="gravatar" style="width: 70%; margin-top: 10px;" />
             <h1>{{member.ldap_username}}{%if cn %}<br /><small>{{cn}}</small>{% endif%}</h1>
             <h5>{{member.get_contact_email()}}</h5>
             <p>
