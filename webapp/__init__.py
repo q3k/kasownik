@@ -1,10 +1,12 @@
+from functools import wraps
+
 import memcache
 import requests
 import sqltap.wsgi
 
 from flask import Flask
 from flask.ext.sqlalchemy import SQLAlchemy
-from flask.ext.login import LoginManager, AnonymousUserMixin
+from flask.ext.login import LoginManager, AnonymousUserMixin, login_required, current_user
 from flaskext.gravatar import Gravatar
 
 app = Flask(__name__)
@@ -60,6 +62,14 @@ class User(object):
 def load_user(username):
     return User(username)
 
+
+def admin_required(f):
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        if not current_user.is_admin():
+            return login_manager.unauthorized()
+        return f(*args, **kwargs)
+    return wrapper
 
 import webapp.views
 import webapp.api

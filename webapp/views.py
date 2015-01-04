@@ -7,7 +7,7 @@ import re
 from email.mime.text import MIMEText
 from subprocess import Popen, PIPE
 
-from webapp import app, forms, User, db, models, mc, cache_enabled
+from webapp import app, forms, User, db, models, mc, cache_enabled, admin_required
 from flask.ext.login import login_user, login_required, logout_user
 from flask import request, redirect, flash, render_template, url_for, abort, g
 import banking
@@ -37,8 +37,9 @@ def memberlist():
 
 
 @app.route("/admin")
+@admin_required
 @login_required
-def index():
+def admin_index():
     members = [m.get_status() for m in models.Member.get_members(True)]
     for member in members:
         due = member['months_due']
@@ -65,7 +66,7 @@ def login():
             user = User(form.username.data)
             login_user(user)
             flash('Logged in succesfully')
-            return redirect(request.args.get("next") or url_for("index"))
+            return redirect(request.args.get("next") or url_for("stats"))
     return render_template("login.html", form=form)
 
 
@@ -73,10 +74,11 @@ def login():
 @login_required
 def logout():
     logout_user()
-    return redirect(url_for("index"))
+    return redirect(url_for("stats"))
 
 
 @app.route("/fetch", methods=["GET", "POST"])
+@admin_required
 @login_required
 def fetch():
     form = forms.BREFetchForm(request.form)
@@ -102,6 +104,7 @@ def fetch():
     return render_template("fetch.html", form=form, transfers_unmatched=transfers_unmatched)
 
 @app.route("/match-easy", methods=["GET"])
+@admin_required
 @login_required
 def match_easy():
     matched = 0
@@ -126,12 +129,14 @@ def match_easy():
     return "okay: matched %i, %i left" % (matched, left)
 
 @app.route("/match-manual", methods=["GET"])
+@admin_required
 @login_required
 def match_manual():
     transfers_unmatched = logic.get_unmatched_transfers()
     return render_template("match_manual.html", transfers_unmatched=transfers_unmatched)
 
 @app.route("/match/<username>/<uid>/<int:months>")
+@admin_required
 @login_required
 def match(username, uid, months):
     member = models.Member.query.filter_by(username=username).first()
@@ -151,6 +156,7 @@ def match(username, uid, months):
     return "ok, %i PLN get!" % transfer.amount
 
 @app.route("/admin/member/<username>")
+@admin_required
 @login_required
 def admin_member(username):
     member = models.Member.get_members(True).filter_by(ldap_username=username).first()
@@ -162,6 +168,7 @@ def admin_member(username):
                            cn=cn)
 
 @app.route("/add/<type>/<username>")
+@admin_required
 @login_required
 def add_member(type, username):
     if type not in ["starving", "fatty"]:
@@ -172,6 +179,7 @@ def add_member(type, username):
     return "ok"
 
 @app.route("/match/", methods=["POST"])
+@admin_required
 @login_required
 def match_user_transfer():
     username = request.form["username"]
@@ -186,6 +194,7 @@ def match_user_transfer():
     return render_template("match_user_transfer.html", member=member, transfer=transfer)
 
 @app.route("/spam", methods=["GET"])
+@admin_required
 @login_required
 def sendspam():
     spam = []
