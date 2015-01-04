@@ -107,6 +107,7 @@ class Member(db.Model):
             else:
                 status['joined'] = (None, None)
                 status['next_unpaid'] = (None, None)
+            status['left'] = False
             self._apply_judgement(status)
             return status
 
@@ -166,6 +167,7 @@ class Member(db.Model):
         status['months_due'] = unpaid_months
         status['payment_status'] = PaymentStatus.okay if unpaid_months < 4 else PaymentStatus.unpaid
         status['last_paid'] = most_recent_transfer
+        status['left'] = not active_payment
 
         if not active_payment:
             status['next_unpaid'] = (None, None)
@@ -190,6 +192,9 @@ class Member(db.Model):
 
     def _apply_judgement(self, status):
         """Check your priviledge, you cisnormative shitlord!"""
+        if status['left']:
+            status['judgement'] = False
+            return
         policy = status['payment_policy']
         if policy == 'Normal':
             if status['payment_status'] == PaymentStatus.okay:
