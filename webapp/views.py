@@ -76,7 +76,10 @@ def login():
             user = User(form.username.data)
             login_user(user)
             flash('Logged in succesfully')
-            return redirect(request.args.get("next") or url_for("stats"))
+            if user.is_admin():
+                return redirect(request.args.get("next") or url_for("admin_index"))
+            else:
+                return redirect(request.args.get("next") or url_for("self_profile"))
     return render_template("login.html", form=form)
 
 
