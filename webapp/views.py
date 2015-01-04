@@ -20,6 +20,7 @@ def stats():
     return render_template('stats.html')
 
 @app.route('/memberlist')
+@login_required
 def memberlist():
     cache_key = 'kasownik-view-memberlist'
     cache_data = mc.get(cache_key)

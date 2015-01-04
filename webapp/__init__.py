@@ -71,12 +71,15 @@ def admin_required(f):
         return f(*args, **kwargs)
     return wrapper
 
+
 import webapp.views
 import webapp.api
+
 
 @login_manager.unauthorized_handler
 def unauthorized():
     return redirect('/login')
+
 
 def init():
     pass
