@@ -7,8 +7,11 @@ import json
 import re
 
 from sqlalchemy.orm import subqueryload_all
+from flask import g
 
 from webapp import app, db, mc, cache_enabled
+import directory
+
 
 
 class APIKey(db.Model):
@@ -176,6 +179,22 @@ class Member(db.Model):
 
         self._apply_judgement(status)
         return status
+
+    def get_list_email(self):
+        if self.preferred_email:
+            return self.preferred_email    
+        return '{}@hackerspace.pl'.format(self.ldap_username)
+
+    def get_contact_email(self):
+        if self.preferred_email:
+            return self.preferred_email    
+        mra = directory.get_member_fields(g.ldap, self.ldap_username,
+                                          'mailRoutingAddress')
+        mra = mra['mailRoutingAddress']
+        if mra:
+            return mra
+        else:
+            return '{}@hackerspace.pl'.format(self.ldap_username)
 
 
     def get_status(self):

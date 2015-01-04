@@ -9,9 +9,10 @@ from subprocess import Popen, PIPE
 
 from webapp import app, forms, User, db, models, mc, cache_enabled
 from flask.ext.login import login_user, login_required, logout_user
-from flask import request, redirect, flash, render_template, url_for, abort
+from flask import request, redirect, flash, render_template, url_for, abort, g
 import banking
 import logic
+import directory
 
 
 @app.route('/')
@@ -156,7 +157,9 @@ def admin_member(username):
     if not member:
         abort(404)
     status = member.get_status()
-    return render_template("admin_member.html", member=member, status=status)
+    cn = directory.get_member_fields(g.ldap, member.ldap_username, 'cn')['cn']
+    return render_template("admin_member.html", member=member, status=status,
+                           cn=cn)
 
 @app.route("/add/<type>/<username>")
 @login_required

@@ -4,8 +4,9 @@
 {% block content %}
 <div class="container">
     <div class="row">
-        <div class="col-md-4">
-            <h1>{{member.ldap_username}}</h1>
+        <div class="col-md-3">
+            <h1>{{member.ldap_username}}{%if cn %}<br /><small>{{cn}}</small>{% endif%}</h1>
+            <h5>{{member.get_contact_email()}}</h5>
             <p>
                 {% if status.judgement %}
                 <span class="label label-success">Active</span><br/><br/>
@@ -18,7 +19,7 @@
             <h4>Membership Type</h4>
             {% include "button_membership_type.html" %}
         </div>
-        <div class="col-md-8">
+        <div class="col-md-9">
             <h3>Judgement Engine™</h3>
             <p>
             {%if status.last_paid[0] == None %}
