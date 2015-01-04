@@ -1,23 +1,60 @@
-var populate_month_callback = function(year, month, required, paid, modified) {
+var urlBase = '/api/';
+var months_back = 28;
+
+var populate_month_callback = function(i, d, url, year, month, required, paid) {
     var populate_month = function(data) {
         var res = data.content,
             date = new Date(year, month, 1);
-            modified = modified || data.modified;
 
         console.log("month " + year + " " + month);
         required.unshift({ x: date.getTime() / 1000, y: res.required });
         paid.unshift({ x: date.getTime() / 1000, y: res.paid });
-
+        i = i - 1;
+        var width = 100 - (i * (100.0 / months_back));
+        $("#loadprogress .progress-bar").attr("style", "width: " + width + "%");
+        if (i == 0)
+        {
+            d.resolve(data.modified);
+        }
+        else
+        {
+            month -= 1;
+            if(month == 0) {
+                month = 12;
+                year -= 1;
+            }
+            url = urlBase + 'month/' + year + '/' + month + '.json';
+            $.getJSON(url, populate_month_callback(i, d, url,
+                                                   year, month,
+                                                   required, paid));
+        }
     };
     return populate_month;
 };
 
-var populate_influx_callback = function(year, month, influx) {
+var populate_influx_callback = function(i, d, url, year, month, influx) {
     var populate_influx = function(data) {
         var res = data.content,
             date = new Date(year, month, 1);
 
         influx.unshift({ x: date.getTime() / 1000, y: res.in });
+        i = i - 1;
+        if (i == 0)
+        {
+            d.resolve();
+        }
+        else
+        {
+            month -= 1;
+            if(month == 0) {
+                month = 12;
+                year -= 1;
+            }
+            url = urlBase + 'cashflow/' + year + '/' + month + '.json';
+            $.getJSON(url, populate_influx_callback(i, d, url,
+                                                   year, month,
+                                                   influx));
+        }
     };
     return populate_influx;
 };
@@ -26,31 +63,20 @@ $(window).load(function() {
     var required = [], paid = [], influx = [];
     var today = new Date(),
         year = 1900 + today.getYear(),
-        month = today.getMonth() + 1,
-        urlBase = '/api/',
-        modified;
+        month = today.getMonth() + 1;
     
-    var requests = [];
-    for(var i = 0; i < 28; ++i) {
-        var url = urlBase + 'month/' + year + '/' + month + '.json';
-        requests.push($.getJSON(url,
-                                populate_month_callback(year, month,
-                                                        required, paid,
-                                                        modified)));
-
-        url = urlBase + 'cashflow/' + year + '/' + month + '.json';
-        requests.push($.getJSON(url, populate_influx_callback(year, month, influx)));
-
-        month -= 1;
-        if(month == 0) {
-            month = 12;
-            year -= 1;
-        }
-    }
-    $.when.apply($, requests).then(function() {
-        var lastmod = document.getElementById("lastmod");
-        lastmod.innerHTML = "Last Modified " + modified;
-
+    var d1 = $.Deferred();
+    var url1 = urlBase + 'month/' + year + '/' + month + '.json';
+    $.getJSON(url1, populate_month_callback(months_back, d1, url1,
+                                            year, month,
+                                            required, paid));
+    var d2 = $.Deferred();
+    var url2 = urlBase + 'cashflow/' + year + '/' + month + '.json';
+    $.getJSON(url2, populate_influx_callback(months_back, d2, url2,
+                                             year, month, influx));
+    $.when(d1, d2).then(function(modified) {
+        $("#lastmod").text("Last modified: " + modified);
+        $("#loadprogress").hide();
         var palette = new Rickshaw.Color.Palette( { scheme: 'munin' } );
         var graph = new Rickshaw.Graph({
             element: document.getElementById("plot"),
