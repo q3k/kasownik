@@ -57,6 +57,46 @@
             {%endif%}
             </p>
             <h3>Transfers</h3>
+            <table class="table table-striped">
+                <tr>
+                    <th>UID</th>
+                    <th>Amount</th>
+                    <th>Title</th>
+                    <th>Date</th>
+                    <th>Covers</th>
+                </tr>
+                {% set rowspan_left = -1 %}
+                {% for mt in member.transfers %}
+                    {% if mt.transfer.uid != "NOTAMEMBER" %}
+                        {% set rowspan = member.mt_covers(mt) %}
+                        {% if rowspan %}
+                            {%  set rowspan_left=rowspan %}
+                        {% elif rowspan_left>0 %}
+                            {%  set rowspan_left=rowspan_left-1 %}
+                        {% endif %}
+                <tr>
+                    {% if rowspan %}
+                    <td style="vertical-align:middle;" rowspan={{rowspan}}>{{ mt.transfer.get_short_uid() }}</td>
+                    <td style="vertical-align:middle;" rowspan={{rowspan}}>{{ mt.transfer.amount /100 }}PLN</td>
+                    <td style="vertical-align:middle;" rowspan={{rowspan}}>{{ mt.transfer.title }}</td>
+                    <td style="vertical-align:middle;" rowspan={{rowspan}}>{{ mt.transfer.date }}</td>
+                    {% elif rowspan_left <= 0 %}
+                    <td>{{ mt.transfer.get_short_uid() }}</td>
+                    <td>{{ mt.transfer.amount /100 }}PLN</td>
+                    <td>{{ mt.transfer.title }}</td>
+                    <td>{{ mt.transfer.date }}</td>
+                    {% endif %}
+                    <td>{{ mt.year }}/{{ "%02i" | format(mt.month) }}</td>
+                </tr>
+                    {% else %}
+                <tr>
+                    <td colspan="5" class="notamember warning">
+                        Not a member from this point...
+                    </td>
+                </tr>
+                {% endif %}
+                {% endfor %}
+            </table>
         </div>
     </div>
 </div>

@@ -78,3 +78,7 @@ body {
 .operations button {
     margin: 4px;
 }
+
+td.notamember {
+    text-align: center;
+}

@@ -153,7 +153,7 @@ def match(username, uid, months):
 @app.route("/admin/member/<username>")
 @login_required
 def admin_member(username):
-    member = models.Member.get_members().filter_by(ldap_username=username).first()
+    member = models.Member.get_members(True).filter_by(ldap_username=username).first()
     if not member:
         abort(404)
     status = member.get_status()

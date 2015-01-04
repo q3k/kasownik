@@ -65,6 +65,27 @@ class Member(db.Model):
                                        name='payment_policy_types'))
     preferred_email = db.Column(db.String(64))
 
+    def mt_covers(self, mt):
+        """For transfer view - given an mt, should we rowspan?"""
+        if mt not in self.transfers:
+            return None
+        ix = self.transfers.index(mt)
+        if ix != 0:
+            # check if the previous mt was covered by the same transfer
+            if self.transfers[ix-1].transfer.uid == mt.transfer.uid:
+                return None
+        # check how many next mts use the same transfer
+        rowspan = 0
+        for ix2 in range(ix+1, len(self.transfers)):
+            if self.transfers[ix2].transfer.uid == mt.transfer.uid:
+                rowspan += 1
+            else:
+                break
+        if rowspan == 0:
+            return None
+        else:
+            return rowspan + 1
+
     @classmethod
     def get_members(kls, deep=False):
         """Gets all members as an SQLAlchemy query.
@@ -268,6 +289,9 @@ class Transfer(db.Model):
         self.amount = _amount
         self.title = _title
         self.date = _date
+
+    def get_short_uid(self):
+        return self.uid[:16]
 
     def parse_title(self):
         m  = re.match(ur"^([a-z0-9\-_\.]+) *\- *(fatty|starving|superfatty) *\- *([0-9a-z\-_ąężźćóżłśń \(\),/\.]+$)", self.title.strip().lower())
