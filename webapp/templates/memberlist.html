@@ -19,7 +19,7 @@
                 <tr>
                     <td>{{member['ldap_username']}}</td>
                     <td>{{member['type']}}</td>
-                    <td>{{member['joined'][0]}}/{{member['joined'][1]}}</td>
+                    <td>{{member['joined'][0]}}/{{"%02i" |format(member['joined'][1])}}</td>
                 </tr>
 {% endfor %}
             </table>

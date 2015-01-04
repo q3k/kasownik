@@ -28,7 +28,7 @@ def memberlist():
         cache_data = []
         for member in members:
             element = member.get_status()
-            if element['payment_status'] != models.PaymentStatus.okay:
+            if not element['judgement']:
                 continue
             cache_data.append(element)
         mc.set(cache_key, cache_data)
