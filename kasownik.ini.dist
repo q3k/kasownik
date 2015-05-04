@@ -3,6 +3,7 @@ plugins = python27
 master = 1
 threads = 10
 chdir = /var/www/kasownik
+venv = /var/www/kasownik/.env
 module = kasownik-uwsgi
 callable = app
 debug = true
