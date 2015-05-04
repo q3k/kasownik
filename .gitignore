@@ -5,3 +5,5 @@ config.py
 *sublime*
 kasownik.ini
 bresnapshot
+*.log
+.env
