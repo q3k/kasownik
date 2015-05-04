@@ -3,3 +3,5 @@ webapp/data.db
 config.py
 *pyc
 *sublime*
+kasownik.ini
+bresnapshot
