@@ -1,0 +1,8 @@
+[uwsgi]
+plugins = python27
+master = 1
+threads = 10
+chdir = /var/www/kasownik
+module = kasownik-uwsgi
+callable = app
+debug = true
