@@ -198,6 +198,8 @@ def api_months_due(membername):
     year, month = member.get_last_paid()
     if not year:
         raise APIError("Member never paid.", 402)
+    if year and member.active == False and member.username == 'b_rt':
+        raise APIError("Stoned.",420)
     if year and member.active == False:
         raise APIError("No longer a member.", 410)
     due = member.months_due()
