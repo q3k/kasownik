@@ -18,7 +18,7 @@ class BREParseError(Exception):
 
 
 class BRERow(object):
-    BRE_IN = [772, 773, 770, 968]
+    BRE_IN = [772, 773, 770, 968, 958]
     SECRET = app.config["SECRET"]
 
     def parse_data(self):
@@ -87,6 +87,7 @@ class BREFetcher(object):
 
     def _get(self, page):
         url = self.BASE + page
+        #r = self.s.get(url,verify=app.config["BRE_CA_PATH"])
         r = self.s.get(url)
         print "[i] GET {} -> {}".format(page, r.status_code)
         if r.status_code != 200:
