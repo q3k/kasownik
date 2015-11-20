@@ -1,5 +1,6 @@
 # - * - coding=utf-8 - * -
 
+import sys, traceback
 import datetime
 import requests
 import re
@@ -95,8 +96,10 @@ def fetch():
             f.write(data)
             f.close()
             return redirect(url_for("fetch"))
-        except:
-            flash("Error when fetching data.")
+        except Exception as e:
+            exc_type, exc_value, exc_traceback = sys.exc_info()
+
+            flash("Error when fetching data. %s" % traceback.format_exception(exc_type, exc_value,exc_traceback))
             return redirect(url_for("fetch"))
 
     logic.update_transfer_rows()
