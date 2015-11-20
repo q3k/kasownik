@@ -44,10 +44,11 @@ def update_transfer_rows():
                                        row.from_account,
                                        row.from_name,
                                        row.amount, row.title,
-                                       row.time)
+                                       row.time,
+                                       False)
             db.session.add(transfer)
     db.session.commit()
 
 
 def get_unmatched_transfers():
-    return models.Transfer.query.filter_by(member_transfers=None).all()
+    return models.Transfer.query.filter_by(member_transfers=None,ignore=False).all()

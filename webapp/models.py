@@ -305,8 +305,9 @@ class Transfer(db.Model):
     amount = db.Column(db.Integer)
     title = db.Column(db.String(256))
     date = db.Column(db.Date)
+    ignore = db.Column(db.Boolean)
 
-    def __init__(self, _id, _uid, _account_from, _name_from, _amount, _title, _date):
+    def __init__(self, _id, _uid, _account_from, _name_from, _amount, _title, _date, _ignore):
         self.id = _id
         self.uid = _uid
         self.account_from = _account_from
@@ -314,6 +315,7 @@ class Transfer(db.Model):
         self.amount = _amount
         self.title = _title
         self.date = _date
+        self.ignore = _ignore
 
     def get_short_uid(self):
         return self.uid[:16]
