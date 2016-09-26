@@ -1,6 +1,7 @@
 {% extends "root.html" %}
 {% block title %}manual match{% endblock %}
 {% block content %}
+<div class="container">
         <script>
         function payment(months, uid, username)
         {
@@ -8,7 +9,7 @@
             div.style.display = "none";
 
             var xhr = new XMLHttpRequest();
-            xhr.open("GET", "/match/" + username + "/" + uid + "/" + months, true);
+            xhr.open("GET", "/admin/match/" + username + "/" + uid + "/" + months, true);
             xhr.send();
         }
         </script>
@@ -39,9 +40,9 @@
 
             {% elif matchability == 2 %}
                 <b>Unknown member...</b><br />
-                <a href="add/starving/{{extra}}">Add member {{extra}} - starving</a><br />
-                <a href="add/fatty/{{extra}}">Add member {{extra}} - fatty</a>
-                <form method="POST" action="/match/">
+                <a href="/admin/member/add/starving/{{extra}}">Add member {{extra}} - starving</a><br />
+                <a href="/admin/member/add/fatty/{{extra}}">Add member {{extra}} - fatty</a>
+                <form method="POST" action="/admin/match/">
                     username: <input name="username" />
                     <input type="hidden" name="uid" value="{{t.uid}}" />
                     <input type="submit" value="match other username" />
@@ -49,7 +50,7 @@
 
             {% elif matchability == 3 %}
                 <b>Unparseable...</b>
-                <form method="POST" action="/match/">
+                <form method="POST" action="/admin/match/">
                     username: <input name="username" />
                     <input type="hidden" name="uid" value="{{t.uid}}" />
                     <input type="submit" value="match" />
@@ -59,4 +60,5 @@
 
         {% endif %}
     {% endfor %}
+</div>
 {% endblock %}

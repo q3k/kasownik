@@ -76,7 +76,7 @@ class User(object):
         if not self.is_authenticated():
             return False
         if self._admin is None:
-            r = requests.get('https://capacifier.hackerspace.pl/staff/'+
+            r = requests.get('https://capacifier.hackerspace.pl/kasownik_access/'+
                              self.username)
             self._admin = r.status_code == 200
         return self._admin

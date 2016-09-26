@@ -1,16 +1,17 @@
 {% extends "root.html" %}
 {% block title %}brefetch{% endblock %}
 {% block content %}
-        <h2>Fetch banking data from BRE</h2>
-        <form method="post" action="/fetch">
+
+<div class="container">
+<h2>Fetch banking data from BRE</h2>
+        <form method="post" action="/admin/fetch">
             {{ form.identifier()|safe }}
             {{ form.token()|safe }}
             <input type="submit" value="Fetch" />
         </form>
         <h2>Matching operations</h2>
-        <a href="/match-easy">Match all easily matchable transfers</a><br />
-        <a href="/match-manual">Match manually all unmatched transfers</a><br />
-        <a href="/match-auto">Auto: first match easy transfers, then manualy match the rest</a>
+        <a href="/admin/match/auto">Match all easily matchable transfers</a><br />
+        <a href="/admin/match/manual">Match manually all unmatched transfers</a><br />
         <h2>Unmatched transfers - troublesome</h2>
         <ul>
         {% for t in transfers_unmatched %}
@@ -27,4 +28,5 @@
             {% endif %}
         {% endfor %}
         </ul>
+</div>
 {% endblock %}

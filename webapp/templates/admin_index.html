@@ -9,12 +9,13 @@
             <h4>Active operations:</h4>
             <h4>Available operations:</h4>
             <p>
-                <form action="/fetch" method="post">
+                <!--<form action="/fetch" method="post">
                     <button type="button" class="btn btn-primary">Fetch transfer data</button>
                 </form>
                 <form action="/spam" method="post">
                     <button type="button" class="btn btn-primary">Send reminders</button>
-                </form>
+                </form>-->
+		<a href="/admin/fetch"><b>Fetch transfer data</b></a>
             </p>
         </div>
         {% for group in active_members|groupby("type") %}

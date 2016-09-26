@@ -1,0 +1,16 @@
+{% extends "root.html" %}
+{% block title %}member {{member.username}}{% endblock %}
+{% block content %}
+    <h2>{{member.username}}</h2>
+    <h3>Info</h3>
+    Active: {{member.active}}<br />
+    Type: {{member.type}}<br />
+    Months due: {{member.months_due()}}<br />
+    Amount due: {{amount_due}}
+    <h3>Transfers...</h3>
+    <ul>
+    {% for member_transfer in member.transfers %}
+        <li>{{member_transfer.year}}/{{member_transfer.month}} - <b>{{ member_transfer.transfer.amount/100 }}PLN</b> (transfer „ {{member_transfer.transfer.title}}” at {{member_transfer.transfer.date}} from {{member_transfer.transfer.name_from}})</li>
+    {% endfor %}
+    </ul>
+{% endblock %}
