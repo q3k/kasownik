@@ -1,11 +1,12 @@
 {% extends "root.html" %}
 {% block title %}member {{member.username}}{% endblock %}
 {% block content %}
+<div class="container">
         <script>
         function payment(months, uid, username)
         {
             var xhr = new XMLHttpRequest();
-            xhr.open("GET", "/match/" + username + "/" + uid + "/" + months, true);
+            xhr.open("GET", "/admin/match/" + username + "/" + uid + "/" + months, true);
             xhr.send();
         }
         </script>
@@ -13,7 +14,7 @@
     <h3>Info</h3>
     Active: {{member.active}}<br />
     Type: {{member.type}}<br />
-    Months due: {{member.months_due()}}<br />
+    Months due: {{member.get_months_due()}}<br />
     Amount due: {{amount_due}}
     <h3>Transfers...</h3>
     <ul>
@@ -27,4 +28,5 @@
     <a href="javascript:payment({{fattycount|int}}, '{{transfer.uid}}', '{{ member.username }}')">This is a {{fattycount|int}}-time payment. (fatty)</a><br />
     <a href="javascript:payment({{starvingcount|int}}, '{{transfer.uid}}', '{{ member.username }}')">This is a {{starvingcount|int}}-time payment. (starving)</a><br />
     <a href="javascript:payment(prompt('months?', '0'), '{{transfer.uid}}', '{{ member.username }}')">This is a N-time payment. (superfatty?)</a><br />
+</div>
 {% endblock %}

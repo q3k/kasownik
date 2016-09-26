@@ -92,6 +92,145 @@ def admin_index():
                            active_members=active_members,
                            inactive_members=inactive_members)
 
+@app.route('/admin/member/<membername>')
+@login_required
+@admin_required
+def admin_member(membername):
+    member = models.Member.get_members(True).filter_by(ldap_username=membername).first()
+    if not member:
+        abort(404)
+    status = member.get_status()
+    cn = directory.get_member_fields(g.ldap, member.ldap_username, 'cn')['cn']
+    return render_template("admin_member.html", member=member, status=status,
+                           cn=cn, admin=True)
+
+@app.route("/admin/member/<membername>/policy:<policy>")
+@login_required
+@admin_required
+def admin_member_set_policy(membername,policy):
+    member = models.Member.query.filter_by(ldap_username=membername).first()
+    member.payment_policy = models.PaymentPolicy[policy].value
+    db.session.add(member)
+    db.session.commit()
+    return redirect(request.referrer)
+
+@app.route("/admin/member/<membername>/membership:<membershiptype>")
+@login_required
+@admin_required
+def admin_member_set_membership(membername,membershiptype):
+    member = models.Member.query.filter_by(ldap_username=membername).first()
+    member.type = models.MembershipType[membershiptype].name
+    db.session.add(member)
+    db.session.commit()
+    return redirect(request.referrer)
+
+
+@app.route("/admin/member/add/<membershiptype>/<username>")
+@login_required
+@admin_required
+def add_member(type, username):
+    member = models.Member(None, username, models.MembershipType[membershiptype].name, True)
+    db.session.add(member)
+    db.session.commit()
+    return "ok"
+
+@app.route("/admin/fetch", methods=["GET", "POST"])
+@login_required
+@admin_required
+def admin_fetch():
+    form = forms.BREFetchForm(request.form)
+    if request.method == "POST" and form.validate():
+        identifier = form.identifier.data
+        token = form.token.data
+        try:
+            f = banking.BREFetcher()
+            f.login(identifier, token)
+            data = f.create_report().read()
+            flash("Fetched data from BRE ({} rows)".format(data.count("\n")))
+            f = open(app.config["BRE_SNAPSHOT_PATH"], "w")
+            f.write(data)
+            f.close()
+            return redirect(url_for("admin_fetch"))
+        except Exception as e:
+            exc_type, exc_value, exc_traceback = sys.exc_info()
+
+            flash("Error when fetching data. %s" % traceback.format_exception(exc_type, exc_value,exc_traceback))
+            return redirect(url_for("admin_fetch"))
+
+    logic.update_transfer_rows()
+    transfers_unmatched = logic.get_unmatched_transfers()
+
+    return render_template("fetch.html", form=form, transfers_unmatched=transfers_unmatched)
+
+
+@app.route("/admin/match/auto", methods=["GET"])
+@login_required
+@admin_required
+def admin_match_auto():
+    matched = 0
+    left = 0
+    transfers_unmatched = logic.get_unmatched_transfers()
+    for transfer in transfers_unmatched:
+        matchability, extra = transfer.get_matchability()
+        if matchability == models.Transfer.MATCH_OK:
+            member = extra
+            if len(member.transfers) > 0:
+                year, month = member.get_next_unpaid()
+            else:
+                year, month = transfer.date.year, transfer.date.month
+            mt = models.MemberTransfer(None, year, month, transfer)
+            member.transfers.append(mt)
+            db.session.add(mt)
+            matched += 1
+        else:
+            left += 1
+    db.session.commit()
+    flash("Matched %i, %i left" % (matched, left))
+    return redirect(url_for("admin_fetch"))
+
+@app.route("/admin/match/manual", methods=["GET"])
+@login_required
+@admin_required
+def match_manual():
+    transfers_unmatched = logic.get_unmatched_transfers()
+    return render_template("match_manual.html", transfers_unmatched=transfers_unmatched)
+
+@app.route("/admin/match/<username>/<uid>/<int:months>")
+@login_required
+@admin_required
+def match(username, uid, months):
+    member = models.Member.query.filter_by(username=username).first()
+    if not member:
+        return "no member"
+    transfer = models.Transfer.query.filter_by(uid=uid).first()
+    if not transfer:
+        return "no transfer"
+
+    for _ in range(months):
+        year, month = member.get_next_unpaid()
+        mt = models.MemberTransfer(None, year, month, transfer)
+        member.transfers.append(mt)
+        db.session.add(mt)
+
+    db.session.commit()
+    return "ok, %i PLN get!" % transfer.amount
+
+
+@app.route("/admin/match/", methods=["POST"])
+@login_required
+@admin_required
+def match_user_transfer():
+    username = request.form["username"]
+    uid = request.form["uid"]
+    member = models.Member.query.filter_by(username=username).first()
+    if not member:
+        return "no such member! :("
+    transfer = models.Transfer.query.filter_by(uid=uid).first()
+    if not transfer:
+        return "no transfer"
+
+    return render_template("match_user_transfer.html", member=member, transfer=transfer)
+
 @app.route("/login", methods=["POST", "GET"])
 def login():
     form = forms.LoginForm(request.form)

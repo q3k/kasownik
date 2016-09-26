@@ -151,7 +151,7 @@ def api_member():
         transfer["from"] = mt.transfer.name_from
         t["transfer"] = transfer
         response["paid"].append(t)
-    response["months_due"] = member.months_due()
+    response["months_due"] = member.get_months_due()
     response["membership"] = member.type
 
     return response
@@ -202,7 +202,7 @@ def api_months_due(membername):
         raise APIError("Stoned.",420)
     if year and member.active == False:
         raise APIError("No longer a member.", 410)
-    due = member.months_due()
+    due = member.get_months_due()
     #now = datetime.datetime.now()
     #then_timestamp = year * 12 + (month-1)
     #now_timestamp = now.year * 12 + (now.month-1)
@@ -222,7 +222,7 @@ def api_cashflow(year, month):
             month = 1
             year += 1
         end = datetime.date(year=year, month=month, day=1)
-        transfers = models.Transfer.query.filter(and_(models.Transfer.date >= start, models.Transfer.date < end)).all()
+        transfers = models.Transfer.query.filter(and_(models.Transfer.date >= start, models.Transfer.date < end, models.Transfer.ignore == False)).all()
         amount_in = sum(t.amount for t in transfers)
         mc.set(cache_key, amount_in)
     return {"in": amount_in/100, "out": -1}

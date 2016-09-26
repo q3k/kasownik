@@ -67,6 +67,15 @@ class PaymentStatus(enum.Enum):
     unpaid = 2 # more than 3 fees unapid
     okay = 3 # fees paid
 
+class PaymentPolicy(enum.Enum):
+    normal = "Normal"
+    extended = "Extended Grace Period"
+    potato = "Potato"
+    disabled = "Disabled"
+
+class MembershipType(enum.Enum):
+    fatty = "Fatty"
+    starving = "Starving"
 
 class Member(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -83,10 +92,7 @@ class Member(db.Model):
     # Extended Grace Period - do not shut off account after grace period
     # Potato - do not ever shut off account, report falsified payment status
     # Disabled - manual disable override, regardless of payment extra
-    payment_policy = db.Column(db.Enum('Normal',
-                                       'Extended Grace Period',
-                                       'Potato',
-                                       'Disabled',
+    payment_policy = db.Column(db.Enum(*[p.value for p in PaymentPolicy.__members__.values()],
                                        name='payment_policy_types'))
     preferred_email = db.Column(db.String(64))
 
@@ -147,7 +153,7 @@ class Member(db.Model):
         status['payment_policy'] = self.payment_policy
         # First check - did we actually get any transfers?
         if not self.transfers or self.transfers[0].transfer.uid == app.config['DUMMY_TRANSFER_UID']:
-            status['payment_status'] = PaymentStatus.never_paid
+            status['payment_status'] = PaymentStatus.never_paid.value
             status['months_due'] = None
             status['last_paid'] = (None, None)
             if self.join_year is not None and self.join_month is not None:
@@ -214,7 +220,7 @@ class Member(db.Model):
             unpaid_months += (now - previous_scalar)
 
         status['months_due'] = unpaid_months
-        status['payment_status'] = PaymentStatus.okay if unpaid_months < 4 else PaymentStatus.unpaid
+        status['payment_status'] = PaymentStatus.okay.value if unpaid_months < 4 else PaymentStatus.unpaid.value
         status['last_paid'] = most_recent_transfer
         status['left'] = not active_payment
 
@@ -262,7 +268,7 @@ class Member(db.Model):
             return
         policy = status['payment_policy']
         if policy == 'Normal':
-            if status['payment_status'] == PaymentStatus.okay and status['last_paid'][0] is not None:
+            if status['payment_status'] == PaymentStatus.okay.value and status['last_paid'][0] is not None:
                 status['judgement'] = True
             else:
                 status['judgement'] = False
@@ -295,6 +301,8 @@ class Member(db.Model):
         now_date = datetime.datetime.now()
         self.join_year = now_date.year
         self.join_month = now_date.month
+        self.ldap_username = _username
+        self.payment_policy = PaymentPolicy.normal.value
 
 
 class Transfer(db.Model):
