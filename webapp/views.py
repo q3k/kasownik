@@ -1,5 +1,6 @@
 # - * - coding=utf-8 - * -
 
+<<<<<<< HEAD
 # Copyright (c) 2015, Sergiusz Bazanski <q3k@q3k.org>
 # All rights reserved.
 #
@@ -24,6 +25,8 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+=======
+import sys, traceback
 import datetime
 import json
 import requests
@@ -254,3 +257,76 @@ def logout():
     return redirect(url_for("stats"))
 
 
+def sendspam():
+    spam = []
+    members = models.Member.query.filter_by(active=True).all()
+    for member in members:
+    	transfers = sorted(member.transfers, key=lambda mt: mt.year * 12 + (mt.month-1) )
+        # quick hack for inactive members
+        active_user = True
+        for mt in transfers:
+            if mt.transfer.date.year == 1:
+                active_user = False
+                break
+        if not active_user:
+            continue
+        details = u"\n".join([u" - opłata za %02i/%i, pokryta przelewem za %.2f PLN w dniu %s" \
+            % (mt.month, mt.year, mt.transfer.amount/100,  mt.transfer.date.strftime("%d/%m/%Y")) for mt in transfers])
+        months_due = member.months_due()
+        money_due = months_due * 10000 if member.type == 'fatty' else months_due * 5000
+        due = "???"
+        if months_due > 0:
+            due = u"Jesteś %i składek (%i PLN) do tyłu. Kiepsko." % (months_due, money_due/100)
+            if months_due < 5:
+                due = u"Jesteś %i składki (%i PLN) do tyłu. Kiepsko." % (months_due, money_due/100)
+            if months_due == 1:
+                due = u"Jesteś o składkę (%i PLN) do tyłu." % (money_due/100)
+            if months_due > 2:
+                due += u"""\nZgodnie z regulaminem HS, trzymiesięczna zaległość w składkach oznacza automatyczne wykreślenie z listy członków i usunięcie karty z zamka.
+Masz tydzień na uregulowanie składki od daty wysłania tego emaila."""
+        elif months_due == 0:
+            due = u"Jesteś na bieżąco ze składkami. Hura!"
+        else:
+            due = u"Jesteś do przodu ze składkami. Świetnie!"
+        text = u"""Siemasz %s,
+
+automatycznie wygenerowałem raport ze stanu składek dla Twojego konta.
+Oto stan na dzień %s:
+
+%s
+
+Oto szczegółowe informacje o Twoich wpłatach:
+%s
+
+Jeśli coś się nie zgadza, odpisz na tego mejla z pretensjami - wiadomość trafi do naszego białkowego skarbnika który postara się ustalić, co poszło źle.
+Jednocześnie przypominam, że trzymiesięczna zaległość w płaceniu oznacza wykreślenie z listy członków - automatyczną!
+
+xoxoxoxo,
+Hackerspace'owy Kasownik
+--
+„100 linii pythona!” - enki o skrypcie do składek""" % (member.username, datetime.datetime.now().strftime("%d/%m/%Y"), due, details)
+        msg = MIMEText(text, "plain", "utf-8")
+        msg["From"] = "Hackerspace'owy Kasownik <kasownik@hackerspace.pl>"
+        msg["Subject"] = "Stan składek na dzień %s" % datetime.datetime.now().strftime("%d/%m/%Y")
+        
+        # I will replace this with python-ldap soon. I promise!
+        p = Popen(["ldapsearch", "-x", "-ZZ", "-b" "ou=People,dc=hackerspace,dc=pl", "uid=%s" % member.username], stdout=PIPE)
+        lines = p.stdout.read()
+        emails = ["%s@hackerspace.pl" % member.username ]
+        for line in lines.split("\n"):
+                m = re.match(r"^mail: (.*)$", line)
+                if m:
+                        email = m.group(1)
+                        if not email.endswith("@hackerspace.pl"):
+                                emails.append(email)
+        msg["To"] = ", ".join(emails)
+        spam.append(msg)
+
+    for msg in spam:
+    	#f = open("/tmp/spamspamspam", "a")
+	#f.write(msg.as_string())
+	#f.close()
+        p = Popen(["/usr/sbin/sendmail", "-t"], stdin=PIPE)
+        p.communicate(msg.as_string())
+        pass
+    return "done!"

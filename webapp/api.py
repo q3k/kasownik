@@ -163,7 +163,7 @@ def _stats_for_month(year, month):
         cache_data = json.loads(cache_data)
         return cache_data[0], cache_data[1]
     # TODO: export this to the config
-    money_required = 4800
+    money_required = 4217+615+615
     money_paid = 0
     mts = models.MemberTransfer.query.filter_by(year=year, month=month).\
         join(models.MemberTransfer.transfer).all()
