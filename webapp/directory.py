@@ -33,6 +33,8 @@ from webapp import mc, cache_enabled, app
 
 def connect():
     c = ldap.initialize(app.config['LDAP_URI'])
+    if 'LDAP_CA_PATH' in app.config:
+        ldap.set_option(ldap.OPT_X_TLS_CACERTFILE, app.config['LDAP_CA_PATH'])
     c.start_tls_s()
     c.simple_bind_s(app.config['LDAP_BIND_DN'],
                     app.config['LDAP_BIND_PASSWORD'])
@@ -45,7 +47,9 @@ def _setup_ldap():
 
 @app.teardown_request
 def _destroy_ldap(exception=None):
-    g.ldap.unbind_s()
+    ldap = getattr(g, 'ldap', None)
+    if ldap:
+        ldap.unbind_s()
 
 def get_member_fields(c, member, fields):
     if isinstance(fields, str):

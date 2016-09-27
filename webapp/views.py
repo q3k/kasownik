@@ -1,6 +1,5 @@
 # - * - coding=utf-8 - * -
 
-<<<<<<< HEAD
 # Copyright (c) 2015, Sergiusz Bazanski <q3k@q3k.org>
 # All rights reserved.
 #
@@ -25,7 +24,6 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-=======
 import sys, traceback
 import datetime
 import json
