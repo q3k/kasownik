@@ -28,14 +28,15 @@ import ldap
 
 from flask import g
 
-from webapp import mc, cache_enabled, app
+from webapp import mc, cache_enabled, app, log
 
 
 def connect():
     c = ldap.initialize(app.config['LDAP_URI'])
-    if 'LDAP_CA_PATH' in app.config:
+    if app.config.get('LDAP_CA_PATH', None):
         ldap.set_option(ldap.OPT_X_TLS_CACERTFILE, app.config['LDAP_CA_PATH'])
-    c.start_tls_s()
+    if app.config.get('LDAP_STARTTLS', True):
+        c.start_tls_s()
     c.simple_bind_s(app.config['LDAP_BIND_DN'],
                     app.config['LDAP_BIND_PASSWORD'])
     return c
@@ -50,6 +51,21 @@ def _destroy_ldap(exception=None):
     ldap = getattr(g, 'ldap', None)
     if ldap:
         ldap.unbind_s()
+
+def bind_as_member(username, password):
+    c = ldap.initialize(app.config['LDAP_URI'])
+    dn = 'uid=%s,%s'.format(username, app.config['LDAP_USER_BASE'])
+    if app.config.get('LDAP_CA_PATH', None):
+        ldap.set_option(ldap.OPT_X_TLS_CACERTFILE, app.config['LDAP_CA_PATH'])
+    if app.config.get('LDAP_STARTTLS', True):
+        c.start_tls_s()
+    try:
+        c.simple_bind_s(dn, password)
+    except ldap.INVALID_CREDENTIALS:
+        return False
+    except ldap.LDAPError as e:
+        log.error("Got invalid exception when binding as %s: %s", username, e)
+    return True
 
 def get_member_fields(c, member, fields):
     if isinstance(fields, str):

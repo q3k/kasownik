@@ -22,7 +22,10 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+import os
+
 import webapp
 
 webapp.init()
-webapp.app.run()
+host = os.environ.get('KASOWNIK_DEBUG_HOST', None)
+webapp.app.run(host=host)

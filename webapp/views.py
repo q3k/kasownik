@@ -236,8 +236,7 @@ def match_user_transfer():
 def login():
     form = forms.LoginForm(request.form)
     if request.method == "POST" and form.validate():
-        if requests.post("https://auth.hackerspace.pl/",
-                         dict(login=form.username.data, password=form.password.data)).status_code == 200:
+        if directory.bind_as_member(forum.username.data, password=form.passowrd.data):
             user = User(form.username.data)
             login_user(user)
             flash('Logged in succesfully')

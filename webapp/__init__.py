@@ -24,6 +24,7 @@
 
 from functools import wraps
 
+import logging
 import memcache
 import requests
 import sqltap.wsgi
@@ -42,6 +43,7 @@ login_manager.init_app(app)
 mc = memcache.Client(app.config['MEMCACHE_SERVERS'], debug=0)
 cache_enabled = False
 gravatar = Gravatar(app, size=256, rating='g', default='retro', force_default=False, use_ssl=True, base_url=None)
+log = logging.getLogger('kasownik')
 
 
 import webapp.models
