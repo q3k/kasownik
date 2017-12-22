@@ -1,0 +1,42 @@
+dn: ou=People,dc=arkhack,dc=org
+ou: People
+objectClass: top
+objectClass: organizationalUnit
+objectClass: domainRelatedObject
+associatedDomain: arkhack.org
+
+dn: ou=Group,dc=arkhack,dc=org
+ou: Group
+objectClass: top
+objectClass: organizationalUnit
+objectClass: domainRelatedObject
+associatedDomain: arkhack.org
+
+dn: uid=alicehacker,ou=People,dc=arkhack,dc=org
+objectClass: person
+objectClass: organizationalPerson
+objectClass: inetOrgPerson
+objectClass: posixAccount
+sn: Hacker
+uidNumber: 1000
+gidNumber: 1000
+uid: alicehacker
+cn: Alice Hacker
+gecos: Alice Hacker
+givenName: Alice
+homeDirectory: /home/alicehacker
+
+dn: uid=bobmaker,ou=People,dc=arkhack,dc=org
+uid: bobmaker
+objectClass: person
+objectClass: organizationalPerson
+objectClass: inetOrgPerson
+objectClass: posixAccount
+cn: Bob Maker
+givenName: Bob
+sn: Maker
+gecos: Bob Maker
+uidNumber: 1001
+gidNumber: 1001
+homeDirectory: /home/bobmaker
+
