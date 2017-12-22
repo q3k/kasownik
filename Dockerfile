@@ -9,18 +9,17 @@ RUN set -e -x ;\
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 ADD pip-requirements.txt /venv/pip-requirements.txt
-
 RUN set -e -x ;\
     virtualenv /venv/venv ;\
     /venv/venv/bin/pip install -r /venv/pip-requirements.txt
 
 ADD . /code
-
 RUN set -e -x ;\
-    chown service:service /code ;\
-    chown service:service /venv
-USER service
+    chown -R service:service /code ;\
+    chown -R service:service /venv
 
+USER service
+WORKDIR /code
 RUN set -e -x ;\
     cp config.py.dist-docker config.py
 

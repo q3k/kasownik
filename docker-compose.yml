@@ -1,6 +1,21 @@
 version: '2'
 services:
+  directory:
+    build: docker/slapd/
+    ports:
+     - "389:389"
+    environment:
+      LDAP_DOMAIN: arkhack.org
+      LDAP_ORGANISATION: Arkham Hackerspace
+      LDAP_ROOTPASS: cthulhufhtagn
+  db:
+    image: postgres
   web:
     build: .
+    environment:
+      SQLALCHEMY_DATABASE_URI: "postgresql+psycopg2://postgres:db/postgres"
+      KASOWNIK_DEBUG_HOST: "0.0.0.0"
     ports:
      - "5000:5000"
+    environment:
+      LDAP_URI: foo
