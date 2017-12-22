@@ -20,6 +20,8 @@ RUN set -e -x ;\
 
 USER service
 WORKDIR /code
+RUN set -e -x ;\
+    cp config.py.dist-docker config.py
 
 EXPOSE 5000
 ENTRYPOINT ["/venv/venv/bin/python", "run-debug.py"]
